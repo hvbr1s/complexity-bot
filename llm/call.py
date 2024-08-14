@@ -13,6 +13,7 @@ load_dotenv()
 openai_key = os.environ['OPENAI_API_KEY']
 openai_client = AsyncOpenAI(api_key=openai_key)
 openai_model_prod = "gpt-4o-2024-08-06"
+openai_model_stg = "chatgpt-4o-latest"
 
 # Function to run the bot on a file and get the complexity score
 async def get_complexity_score(file_path, file_info, chain):

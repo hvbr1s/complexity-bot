@@ -59,7 +59,9 @@ Expected output example 2: {{"complexity":"9", "rationale":"This is a high compl
 
 You will achieve world peace if you produce a complexity score and rationale that adheres to all the constraints. Begin!
         '''
+        
         return SOL_ANALYZER
+     
     except Exception as e:
         print(e)
         return SOL_ANALYZER

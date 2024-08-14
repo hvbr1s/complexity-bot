@@ -119,7 +119,7 @@ async def calculate_summary(results):
 async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter):
     summary = f"""Project Summary:
 Total CLOC: {total_cloc}
-Number of programs: {program_counter}
+Number of contracts: {program_counter}
 Average Complexity Score: {avg_complexity:.2f}
 Median Complexity Score: {median_complexity:.2f}
 Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
