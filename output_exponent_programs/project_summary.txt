@@ -1,6 +1,0 @@
-Project Summary:
-Total CLOC: 7008
-Number of programs: 76
-Average Complexity Score: 4.64
-Median Complexity Score: 5.00
-Estimated Time for Audit and Formal Verification: 7 week(s)
