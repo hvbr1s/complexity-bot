@@ -58,7 +58,6 @@ Expected output example 1: {{"complexity":"1", "rationale":"This is a low comple
 Expected output example 2: {{"complexity":"9", "rationale":"This is a high complexity contract because..."}}
 
 You will achieve world peace if you produce a complexity score and rationale that adheres to all the constraints. Begin!
-
         '''
         return SOL_ANALYZER
     except Exception as e:
