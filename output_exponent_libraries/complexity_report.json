@@ -1,0 +1,95 @@
+{
+  "complexity_report": [
+    {
+      "file": "./docs/libraries/tcurve/src/math.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves non-linear mathematical operations, complex liquidity and trading logic, and requires careful handling of numerical precision and potential edge cases.",
+      "cloc": "374",
+      "code to comment ratio": "21"
+    },
+    {
+      "file": "./docs/libraries/precise_number/src/lib.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract due to the use of non-linear mathematical operations and custom high-precision number handling, which can complicate formal verification.",
+      "cloc": "232",
+      "code to comment ratio": "3"
+    },
+    {
+      "file": "./docs/libraries/dec_num/src/lib.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract because it involves non-linear mathematical operations and custom decimal handling, which can pose challenges for formal verification.",
+      "cloc": "200",
+      "code to comment ratio": "2"
+    },
+    {
+      "file": "./docs/libraries/token_util/src/lib.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract because it involves multiple CPIs, account creation, and initialization logic, but it uses the Anchor framework which simplifies the code structure.",
+      "cloc": "120",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/libraries/kamino_farms_cpi/src/state/farm_state.rs",
+      "score": "4",
+      "rationale": "This is a moderate complexity contract because it involves multiple data structures with potential for complex account validation and handling of rewards, but lacks CPIs and non-linear math.",
+      "cloc": "92",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/libraries/kamino_farms_cpi/src/lib.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract because it involves multiple account manipulations and a cross-program invocation, but lacks non-linear math or complex account validation logic.",
+      "cloc": "55",
+      "code to comment ratio": "11"
+    },
+    {
+      "file": "./docs/libraries/tcurve/src/num.rs",
+      "score": "4",
+      "rationale": "This is a moderate complexity contract because it involves non-linear mathematical operations using floating-point numbers, which can be challenging for formal verification.",
+      "cloc": "55",
+      "code to comment ratio": "10"
+    },
+    {
+      "file": "./docs/libraries/i80_converter/src/lib.rs",
+      "score": "3",
+      "rationale": "This is a low complexity contract because it involves straightforward conversion logic without complex Solana-specific features or non-linear mathematics.",
+      "cloc": "33",
+      "code to comment ratio": "19"
+    },
+    {
+      "file": "./docs/libraries/kamino_fraction/src/lib.rs",
+      "score": "3",
+      "rationale": "This is a low complexity contract because it involves straightforward conversion logic without complex Solana-specific features or non-linear mathematics.",
+      "cloc": "31",
+      "code to comment ratio": "20"
+    },
+    {
+      "file": "./docs/libraries/sy_common/src/lib.rs",
+      "score": "3",
+      "rationale": "This is a low complexity contract because it is very small with straightforward data structures and no complex logic or operations.",
+      "cloc": "19",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/libraries/anchor_util/src/lib.rs",
+      "score": "2",
+      "rationale": "This is a low complexity contract because it consists of a single function with straightforward logic and no complex operations or dependencies.",
+      "cloc": "8",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/libraries/kamino_farms_cpi/src/state/mod.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it only contains module declarations and re-exports with no actual logic or operations.",
+      "cloc": "2",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/libraries/tcurve/src/lib.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it only contains module declarations without any actual implementation or logic.",
+      "cloc": "2",
+      "code to comment ratio": "0"
+    }
+  ]
+}

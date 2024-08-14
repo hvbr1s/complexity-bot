@@ -1,0 +1,536 @@
+{
+  "complexity_report": [
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/state/market_two.rs",
+      "score": "8",
+      "rationale": "This is a high complexity contract because it involves non-linear mathematical operations, complex account structures, and multiple CPIs, making formal verification challenging.",
+      "cloc": "395",
+      "code to comment ratio": "28"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/market_two/market_two_init.rs",
+      "score": "8",
+      "rationale": "This is a high complexity contract because it involves multiple CPIs, complex account structures, non-linear mathematics, and custom logic that are challenging to formally verify.",
+      "cloc": "283",
+      "code to comment ratio": "16"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_admin/src/lib.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to its use of multiple account structures, custom logic for admin management, and reliance on the Anchor framework.",
+      "cloc": "235",
+      "code to comment ratio": "2"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/state/yield_token_position.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves non-linear mathematical operations, complex account structures, and potential challenges in formal verification due to the use of precise number calculations and checked arithmetic.",
+      "cloc": "206",
+      "code to comment ratio": "16"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/withdraw.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves multiple CPIs, complex account validation logic, and relies on custom libraries, making formal verification challenging.",
+      "cloc": "200",
+      "code to comment ratio": "5"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/utils/sy_cpi.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract due to multiple CPIs, account handling, and custom logic for token operations.",
+      "cloc": "189",
+      "code to comment ratio": "7"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/instructions/init_sy.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves multiple Cross-Program Invocations (CPIs), complex account validation logic, and the use of Program Derived Addresses (PDAs), which increase the difficulty of formal verification.",
+      "cloc": "181",
+      "code to comment ratio": "5"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/deposit.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves multiple CPIs, complex account structures, and intricate emission handling logic that are challenging to formally verify.",
+      "cloc": "178",
+      "code to comment ratio": "19"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/instructions/mint.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify.",
+      "cloc": "170",
+      "code to comment ratio": "8"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/admin/initialize_vault.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract due to the use of Program Derived Addresses, multiple account initializations, and custom account validation logic.",
+      "cloc": "168",
+      "code to comment ratio": "8"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/state/vault.rs",
+      "score": "6",
+      "rationale": "The program involves complex financial logic with multiple operations on monetary values, uses advanced features like emission tracking, and involves potential security considerations with respect to escrow and PT management.",
+      "cloc": "166",
+      "code to comment ratio": "33"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/utils.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract due to the use of CPIs, account validation logic, and custom libraries, which require careful security considerations.",
+      "cloc": "161",
+      "code to comment ratio": "9"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/admin/init_sy.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract due to the use of multiple Program Derived Addresses (PDAs), Cross-Program Invocations (CPIs), and complex account validation logic.",
+      "cloc": "160",
+      "code to comment ratio": "9"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/merge.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify.",
+      "cloc": "158",
+      "code to comment ratio": "18"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/strip.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify.",
+      "cloc": "157",
+      "code to comment ratio": "13"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/market_two/trade_pt.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify.",
+      "cloc": "154",
+      "code to comment ratio": "23"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/instructions/redeem.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify.",
+      "cloc": "150",
+      "code to comment ratio": "8"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/read/get_sy_state.rs",
+      "score": "6",
+      "rationale": "This program has moderate complexity due to its use of multiple account validations, optional accounts, and cross-program invocations, which require careful handling and verification.",
+      "cloc": "139",
+      "code to comment ratio": "4"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/lib.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify.",
+      "cloc": "138",
+      "code to comment ratio": "20"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/mint_sy.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify.",
+      "cloc": "138",
+      "code to comment ratio": "15"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/state/sy_meta.rs",
+      "score": "6",
+      "rationale": "This program has moderate complexity due to its use of non-linear math operations and custom logic for emissions management, but it lacks extensive CPIs or complex account structures.",
+      "cloc": "138",
+      "code to comment ratio": "42"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/instructions/claim_reward.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract due to the use of multiple CPIs, PDAs, and account validation logic, but it benefits from the Anchor framework which simplifies some aspects.",
+      "cloc": "134",
+      "code to comment ratio": "5"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/utils.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract due to the presence of CPIs, account validation logic, and non-linear math operations.",
+      "cloc": "132",
+      "code to comment ratio": "9"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/deposit_yt.rs",
+      "score": "7",
+      "rationale": "This is a high complexity contract because it involves multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify.",
+      "cloc": "127",
+      "code to comment ratio": "12"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/instructions/withdraw.rs",
+      "score": "6",
+      "rationale": "This program has moderate complexity due to its use of multiple CPIs, PDAs, and account validation logic, but lacks non-linear math or floating-point operations.",
+      "cloc": "126",
+      "code to comment ratio": "6"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/market_two/withdraw_liquidity.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract due to the use of multiple CPIs, account validation logic, and custom logic for liquidity withdrawal.",
+      "cloc": "125",
+      "code to comment ratio": "6"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/instructions/deposit.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract because it involves multiple CPIs, uses PDAs, and has complex account validation logic, but it benefits from the Anchor framework which simplifies some aspects.",
+      "cloc": "121",
+      "code to comment ratio": "7"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/market_two/sell_yt.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract due to the use of multiple CPIs, complex account structures, and the handling of multiple token accounts and transfers.",
+      "cloc": "119",
+      "code to comment ratio": "24"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/withdraw_yt.rs",
+      "score": "6",
+      "rationale": "This program has moderate complexity due to its use of CPIs, account validation logic, and non-linear math operations.",
+      "cloc": "119",
+      "code to comment ratio": "13"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/market_two/deposit_liquidity.rs",
+      "score": "6",
+      "rationale": "This program has moderate complexity due to multiple CPIs, account handling, and custom logic for liquidity deposits.",
+      "cloc": "118",
+      "code to comment ratio": "4"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/redeem_sy.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract due to the use of CPIs, account validation logic, and non-linear math operations.",
+      "cloc": "108",
+      "code to comment ratio": "13"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/state/meta.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to the use of Program Derived Addresses (PDAs), custom account validation logic, and the handling of emissions which involves non-linear math operations.",
+      "cloc": "95",
+      "code to comment ratio": "31"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/admin/treasury/collect_treasury_interest.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to the use of CPIs, account validation logic, and custom libraries.",
+      "cloc": "85",
+      "code to comment ratio": "12"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/instructions/get_sy_state.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to the use of multiple Program Derived Addresses (PDAs) and account validation logic, but lacks non-linear math or complex CPIs.",
+      "cloc": "85",
+      "code to comment ratio": "6"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/admin/collect_treasury_emission.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract because it involves cross-program invocations, account validation logic, and uses custom error handling, but lacks non-linear math or complex account structures.",
+      "cloc": "85",
+      "code to comment ratio": "9"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/state/position.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to the use of non-linear math operations and custom data structures.",
+      "cloc": "82",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/admin/treasury/collect_treasury_emission.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to the use of CPIs, account validation logic, and custom error handling.",
+      "cloc": "81",
+      "code to comment ratio": "4"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/instructions/create_standard_token.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract because it involves multiple account initializations with PDAs, uses the Anchor framework, and has some account validation logic, but lacks non-linear math or complex CPIs.",
+      "cloc": "81",
+      "code to comment ratio": "2"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/collect_emission.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to the use of CPIs, account validation logic, and potential security considerations.",
+      "cloc": "78",
+      "code to comment ratio": "8"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/lib.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to the use of multiple CPIs, PDAs, and custom logic for financial operations.",
+      "cloc": "75",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/collect_interest.rs",
+      "score": "6",
+      "rationale": "This program has moderate complexity due to its use of CPIs, account validation, and custom logic for token transfers.",
+      "cloc": "74",
+      "code to comment ratio": "22"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/collect_emission.rs",
+      "score": "6",
+      "rationale": "This is a moderate complexity contract due to the use of CPIs, account validation logic, and custom error handling.",
+      "cloc": "73",
+      "code to comment ratio": "3"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/lib.rs",
+      "score": "4",
+      "rationale": "This is a moderate complexity contract due to the use of multiple program-derived addresses and cross-program invocations, but it benefits from the Anchor framework which simplifies account handling and reduces potential security risks.",
+      "cloc": "70",
+      "code to comment ratio": "12"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/state/position.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract because it involves non-linear mathematical operations using the 'Number' type and has custom logic for reward tracking and synchronization.",
+      "cloc": "69",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/state/personal_yield_tracker.rs",
+      "score": "4",
+      "rationale": "This is a moderate complexity contract due to the use of non-linear math operations and potential overflow handling.",
+      "cloc": "65",
+      "code to comment ratio": "17"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/self_cpi.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract because it involves multiple Cross-Program Invocations (CPIs) and uses custom account structures, but lacks non-linear mathematics or complex account validation logic.",
+      "cloc": "63",
+      "code to comment ratio": "2"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/market_two/withdraw_lp.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to the use of CPIs, account validation logic, and reliance on external libraries.",
+      "cloc": "62",
+      "code to comment ratio": "13"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/admin/add_emission.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to the use of CPIs, PDAs, and account validation logic.",
+      "cloc": "60",
+      "code to comment ratio": "12"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/market_two/deposit_lp.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to the use of CPIs, unchecked accounts, and the need for account validation.",
+      "cloc": "57",
+      "code to comment ratio": "16"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/state/lp_position.rs",
+      "score": "3",
+      "rationale": "This is a low complexity contract because it primarily involves basic operations on LP positions with straightforward logic and no complex mathematical operations or CPIs.",
+      "cloc": "55",
+      "code to comment ratio": "17"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/instructions/add_emission.rs",
+      "score": "5",
+      "rationale": "This is a moderate complexity contract due to the use of PDAs, account reallocations, and custom account validation logic.",
+      "cloc": "49",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/admin/add_emission.rs",
+      "score": "4",
+      "rationale": "This is a moderate complexity contract due to the use of account reallocation, custom account validation logic, and reliance on external libraries.",
+      "cloc": "47",
+      "code to comment ratio": "15"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/initialize_yield_position.rs",
+      "score": "4",
+      "rationale": "This is a moderate complexity contract due to the use of Program Derived Addresses, account validation logic, and the handling of multiple accounts, but it lacks non-linear math or complex CPIs.",
+      "cloc": "41",
+      "code to comment ratio": "30"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/instructions/initialize_position.rs",
+      "score": "4",
+      "rationale": "This is a moderate complexity contract due to the use of Program Derived Addresses (PDAs) and account initialization logic, but lacks complex mathematical operations or multiple CPIs.",
+      "cloc": "41",
+      "code to comment ratio": "3"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/state/cpi_common.rs",
+      "score": "3",
+      "rationale": "This is a low complexity contract because it primarily involves data structure definitions and simple transformations without complex logic or non-linear operations.",
+      "cloc": "33",
+      "code to comment ratio": "25"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/read/get_position.rs",
+      "score": "3",
+      "rationale": "This is a low complexity contract because it has a small codebase with straightforward logic, no complex mathematical operations, and uses the Anchor framework for easier readability and reasoning.",
+      "cloc": "33",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/initialize_position.rs",
+      "score": "4",
+      "rationale": "This is a moderate complexity contract due to the use of Program Derived Addresses (PDAs) and account initialization logic, but lacks complex mathematical operations or multiple CPIs.",
+      "cloc": "30",
+      "code to comment ratio": "7"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/market_two/buy_yt.rs",
+      "score": "4",
+      "rationale": "This is a moderate complexity contract because it involves account management and token operations, but lacks detailed implementation and complex logic.",
+      "cloc": "28",
+      "code to comment ratio": "65"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/market_two/init_lp_position.rs",
+      "score": "3",
+      "rationale": "This is a low complexity contract because it is a very small program with straightforward logic, minimal lines of code, and no complex mathematical operations or CPIs.",
+      "cloc": "28",
+      "code to comment ratio": "4"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/utils/pda.rs",
+      "score": "2",
+      "rationale": "This is a low complexity contract because it primarily involves simple PDA derivations without complex logic or security-critical operations.",
+      "cloc": "23",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/error.rs",
+      "score": "2",
+      "rationale": "This is a low complexity contract because it primarily defines error codes without complex logic or operations.",
+      "cloc": "20",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/market_two/mod.rs",
+      "score": "2",
+      "rationale": "This is a low complexity contract because it primarily consists of module imports and exports without any complex logic or operations.",
+      "cloc": "18",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/instructions/mod.rs",
+      "score": "2",
+      "rationale": "This is a low complexity contract because it primarily consists of module declarations and re-exports with minimal logic.",
+      "cloc": "18",
+      "code to comment ratio": "12"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/util.rs",
+      "score": "3",
+      "rationale": "This is a low complexity contract because it has a very small size, uses straightforward logic, and relies on established libraries like Anchor and SPL.",
+      "cloc": "16",
+      "code to comment ratio": "7"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/mod.rs",
+      "score": "2",
+      "rationale": "This is a low complexity contract because it primarily consists of module declarations and re-exports without any complex logic or operations.",
+      "cloc": "16",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/mod.rs",
+      "score": "2",
+      "rationale": "This is a low complexity contract because it primarily consists of module declarations and re-exports without any complex logic or operations.",
+      "cloc": "16",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/error.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it only defines a simple error enumeration with no complex logic or operations.",
+      "cloc": "14",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/state/mod.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it primarily consists of module declarations and re-exports without any complex logic or operations.",
+      "cloc": "11",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/mod.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it contains only module declarations and re-exports with no actual logic or operations.",
+      "cloc": "6",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/admin/mod.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it only contains module declarations and re-exports without any actual logic or operations.",
+      "cloc": "6",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/admin/mod.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it only contains module imports and re-exports without any actual logic or operations.",
+      "cloc": "6",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/instructions/vault/admin/treasury/mod.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it only contains module declarations and re-exports with no actual logic or operations.",
+      "cloc": "4",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/exponent_core/src/utils/mod.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it contains only module imports and exports with no actual logic or operations.",
+      "cloc": "4",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/kamino_lend_standard/src/state/mod.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it only contains module declarations and re-exports with no actual logic or operations.",
+      "cloc": "4",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/instructions/read/mod.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it only contains module imports and exports with no actual logic or operations.",
+      "cloc": "4",
+      "code to comment ratio": "0"
+    },
+    {
+      "file": "./docs/exponent/programs/marginfi_standard/src/state/mod.rs",
+      "score": "1",
+      "rationale": "This is a low complexity contract because it only contains module declarations and re-exports without any logic or operations.",
+      "cloc": "4",
+      "code to comment ratio": "0"
+    }
+  ]
+}

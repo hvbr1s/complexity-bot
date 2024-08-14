@@ -1,0 +1,6 @@
+.env
+/venvsol
+/docs
+/bin
+/output
+**/__pycache__
