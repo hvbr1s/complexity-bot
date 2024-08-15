@@ -31,6 +31,7 @@ async def get_rust_files_info():
                 "blank_lines": file_info.get('blank', 0),
                 "file_content": file_content
             }
+            
     return rust_files
 
 # Function to analyze all Rust files

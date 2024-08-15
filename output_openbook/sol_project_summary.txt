@@ -1,6 +1,0 @@
-Project Summary:
-Total CLOC: 3678
-Number of files: 38
-Average Complexity Score: 3.76
-Median Complexity Score: 3.00
-Estimated Time for Audit and Formal Verification: 4 week(s)

@@ -1,10 +1,10 @@
 import os
 import json
 import asyncio
-import statistics
 import aiofiles
 import subprocess
 from llm.call import get_complexity_score
+from calculate.summary import calculate_summary_statistics
 from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
 
 # Function to run CLOC on 'docs' directories and get Rust file information
@@ -61,14 +61,6 @@ async def save_results(results, output_file):
         json_data = {"complexity_report": results}
         await f.write(json.dumps(json_data, indent=2))
         
-# Function to calculate summary statistics
-async def calculate_summary(results):
-    total_cloc = sum(int(result['cloc']) for result in results)
-    complexity_scores = [float(result['score']) for result in results]
-    avg_complexity = statistics.mean(complexity_scores)
-    median_complexity = statistics.median(complexity_scores)
-    return total_cloc, avg_complexity, median_complexity
-
 # Function to save summary to a txt file
 async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter):
     summary = f"""Project Summary:
@@ -99,7 +91,7 @@ async def main():
     await save_results(results, complexity_report_file)
     
     print("Calculating summary statistics...🤔")
-    total_cloc, avg_complexity, median_complexity = await calculate_summary(results)
+    total_cloc, avg_complexity, median_complexity = await calculate_summary_statistics(results)
     
     # Calculate adjusted time estimate
     adjusted_time_estimate = await calculate_adjusted_time_estimate_loc_weighted(total_cloc, avg_complexity)
