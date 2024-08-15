@@ -37,7 +37,15 @@ When provided with the Ethereum smart contract to analyze, consider the followin
    - Number and complexity of state variables
    - Use of complex data structures (mappings, nested mappings, structs)
    - Implementation of upgradeable contracts
-   - Use of external contract interactions
+
+5. Consider the number of calls to other contracts, the more calls the more complex the contract:
+   - Direct function call (example: `OtherContract(address).functionName();`)
+   - Low-level call (example: `address(contractAddress).call(abi.encodeWithSignature("functionName(uint256)", arg));`)
+   - Interface-based call (example: `IContractInterface(address).functionName();`)
+   - Using 'this' for external calls within the same contract (example: `this.functionName();`)
+   - Library usage (example: `LibraryName.functionName();`)
+   - Contract creation via 'new' keyword (example: `ContractName newContract = new ContractName(constructorArgs);`)
+   - Event emission (example: `emit EventName(parameters);`)
 
 5. Consider security-focused elements:
    - Proper access control mechanisms

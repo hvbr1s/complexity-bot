@@ -32,7 +32,11 @@ async def calculate_adjusted_time_estimate_base(total_loc, avg_complexity):
     # Step 3: Adjust the base estimate with the complexity multiplier
     adjusted_estimate_weeks = base_estimate_weeks * complexity_multiplier
     
-    # Step 4: Round up to the nearest whole week
+    # Step 4: adjust estimation for large but simple code bases
+    if total_loc >= 1000 and adjusted_estimate_weeks <= 1:
+        adjusted_estimate_weeks += 1 
+    
+    # Step 5: Round up to the nearest whole week
     return math.ceil(adjusted_estimate_weeks)
 
 
@@ -79,6 +83,10 @@ async def calculate_adjusted_time_estimate_loc_weighted(total_loc, avg_complexit
     
     # Step 4: Combine multipliers and apply to base estimate
     adjusted_estimate_weeks = base_estimate_weeks * loc_multiplier * complexity_multiplier
+    
+    # Step 5: adjust estimation for large but simple code bases
+    if total_loc >= 1000 and adjusted_estimate_weeks <= 1:
+        adjusted_estimate_weeks += 1 
     
     # Step 5: Round up to the nearest whole week
     return math.ceil(adjusted_estimate_weeks)
