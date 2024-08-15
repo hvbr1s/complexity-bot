@@ -7,12 +7,12 @@ from llm.call import get_complexity_score
 from calculate.summary import calculate_summary_statistics
 from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
 
-# Function to run CLOC on 'docs' directories and get Rust file information
-async def get_rust_files_info():
+# Function to run CLOC on 'docs' directories and get Solidity file information
+async def get_solidity_files_info():
     result = subprocess.run(['cloc', './docs', '--json', '--include-lang=Solidity', '--by-file'], capture_output=True, text=True)
     cloc_output = json.loads(result.stdout)
     
-    rust_files = {}
+    solidity_files = {}
     for file_path, file_info in cloc_output.items():
         if file_path != 'header' and file_path != 'SUM':
             
@@ -24,7 +24,7 @@ async def get_rust_files_info():
                 print(f"Error reading file {file_path}: {e}")
                 file_content = ""
             
-            rust_files[file_path] = {
+            solidity_files[file_path] = {
                 "file_name": file_path,
                 "code_lines": file_info.get('code', 0),
                 "comment_lines": file_info.get('comment', 0),
@@ -32,15 +32,15 @@ async def get_rust_files_info():
                 "file_content": file_content
             }
 
-    return rust_files
+    return solidity_files
 
-# Function to analyze all Rust files
+# Function to analyze all Solidity files
 async def analyze_rust_programs():
-    rust_files = await get_rust_files_info()
+    solidity_files = await get_solidity_files_info()
     results = []
     program_counter = 0
     
-    for file_path, file_info in rust_files.items():
+    for file_path, file_info in solidity_files.items():
         score, rationale, code_lines, code_to_comment_ratio = await get_complexity_score(file_path, file_info, chain="evm")
         program_counter += 1
         if score is not None:
@@ -52,7 +52,7 @@ async def analyze_rust_programs():
                 'code to comment ratio': str(code_to_comment_ratio)
             })
             
-    print(f'Number of programs in this repo: {program_counter}')  
+    print(f'Number of files in this repo: {program_counter}')  
     return results, program_counter
 
 # Function to save results to a json file
