@@ -30,7 +30,7 @@ Upon receiving the program code, analyze its potential complexity based on the f
    - Implementation of complex data structures like Merkle trees, hash tables or binary trees.
 
 3. Assess the following Solana-specific complexity factors:
-   - Frequency and complexity of Cross-Program Invocations (CPI)
+   - Frequency and complexity of Cross-Program Invocations (CPI) (look for the 'invoke' or 'invoke_signed' functions)
    - Use of Program Derived Addresses (PDAs)
    - Implementation of complex account validation logic
    - Handling of multiple signers or complex signer validation

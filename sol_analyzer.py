@@ -52,7 +52,7 @@ async def analyze_rust_programs():
                 'code to comment percent ratio': str(code_to_comment_ratio)
             })
             
-    print(f'Number of programs in this repo: {program_counter}')  
+    print(f'Number of files in this repo: {program_counter} 📁')  
     return results, program_counter
 
 # Function to save results to a json file
@@ -127,7 +127,7 @@ async def main():
         os.makedirs(output_folder)
         print(f"Created output folder: {output_folder} 📁")
     
-    print("Analyzing Rust programs...🕵️‍♂️")
+    print("Analyzing Rust files...🕵️‍♂️")
     results, program_counter = await analyze_rust_programs()
     
     print("Saving complexity report...💾")

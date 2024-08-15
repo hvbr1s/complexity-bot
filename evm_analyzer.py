@@ -120,7 +120,7 @@ async def calculate_summary(results):
 async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter):
     summary = f"""Project Summary:
 Total CLOC: {total_cloc}
-Number of contracts: {program_counter}
+Number of files: {program_counter}
 Average Complexity Score: {avg_complexity:.2f}
 Median Complexity Score: {median_complexity:.2f}
 Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
@@ -139,7 +139,7 @@ async def main():
         os.makedirs(output_folder)
         print(f"Created output folder: {output_folder} 📁")
     
-    print("Analyzing Solidity smart-contracts...🕵️‍♂️")
+    print("Analyzing Solidity files...🕵️‍♂️")
     results, program_counter = await analyze_rust_programs()
     
     print("Saving complexity report...💾")
