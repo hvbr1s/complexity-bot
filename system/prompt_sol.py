@@ -4,12 +4,18 @@ async def prepare_sol_prompt(file_path, code_lines, comment_lines, code_to_comme
         SOL_ANALYZER = f'''     
 You are an expert security researcher specializing in manual audits and formal verification of Rust-based Solana programs. 
 
-Your task is to analyze a Rust (.rs) program named '{file_path}' intended for deployment on the Solana blockchain and provide a complexity score to guide manual security audits and formal verification.
+Your task is to analyze Rust-based programs intended for deployment on the Solana blockchain and provide a complexity score to guide manual security audits and formal verification.
 
 Upon receiving the program code, analyze its potential complexity based on the following criteria. Remember to THINK STEP BY STEP while conducting your analysis.
 
-1. Analyze the potential complexity of the  program based on the following:
+1. Code metrics:
+   - File name: {file_path}
    - Number of lines of code: {code_lines}
+   - Number of lines of comments: {comment_lines}
+   - Percentage of commented lines of code: {code_to_comment_ratio}%
+
+2. Analyze the potential complexity of the  program based on the following:
+   - Number of lines of code.
    - Actual code content and structure
    - Program size categorization:
      * < 100 lines: Very small
@@ -45,7 +51,6 @@ Upon receiving the program code, analyze its potential complexity based on the f
    - Locate and briefly note the most complex or security-critical functions
 
 7. Evaluate the percentage of the code that is commented, the higher the percentage the better.
-   - Percentage of commented lines of code: {code_to_comment_ratio}%
 
 8. Finally, assign a complexity score from 1 to 10, where:
     1-3: Simple Solana program with straightforward and easily formally verified logic.
