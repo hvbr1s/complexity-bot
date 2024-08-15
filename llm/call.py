@@ -18,7 +18,7 @@ openai_model_stg = "chatgpt-4o-latest"
 # Function to run the bot on a file and get the complexity score
 async def get_complexity_score(file_path, file_info, chain):
     try:
-        rust_program = file_info['file_content']
+        file = file_info['file_content']
         code_lines = str(file_info['code_lines'])
         comment_lines = str(file_info['comment_lines'])
         # Compute code to comment ratio
@@ -34,7 +34,7 @@ async def get_complexity_score(file_path, file_info, chain):
             model=openai_model_prod,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": rust_program}
+                {"role": "user", "content": file}
             ],
             response_format= { "type": "json_object" },
             timeout=60,
