@@ -1,3 +1,4 @@
+import os
 import json
 import math
 import asyncio
@@ -129,8 +130,14 @@ Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
         
 ## Main function
 async def main():
-    complexity_report_file = './output/complexity_report.json'
-    summary_file = './output/project_summary.txt'
+    output_folder = './output'
+    complexity_report_file = f'{output_folder}/evm_complexity_report.json'
+    summary_file = './output/evm_project_summary.txt'
+    
+    # Check if the output folder exists, if not create it
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+        print(f"Created output folder: {output_folder} 📁")
     
     print("Analyzing Solidity smart-contracts...🕵️‍♂️")
     results, program_counter = await analyze_rust_programs()
