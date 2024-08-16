@@ -63,11 +63,13 @@ async def save_results(results, output_file):
         
 # Function to save summary to a txt file
 async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter):
+    prover_complexity = ((int(avg_complexity) + int(median_complexity))/2) /2 
     summary = f"""Project Summary:
 Total CLOC: {total_cloc}
 Number of files: {program_counter}
 Average Complexity Score: {avg_complexity:.2f}
 Median Complexity Score: {median_complexity:.2f}
+How complicated is it for the Prover? {prover_complexity} 
 Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
 """
     async with aiofiles.open(output_file, 'w') as f:
