@@ -69,7 +69,7 @@ Total CLOC: {total_cloc}
 Number of files: {program_counter}
 Average Complexity Score: {avg_complexity:.2f}
 Median Complexity Score: {median_complexity:.2f}
-How complicated is it for the Prover? {prover_complexity} 
+How complicated is it for the Prover? {str(prover_complexity)} 
 Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
 """
     async with aiofiles.open(output_file, 'w') as f:
