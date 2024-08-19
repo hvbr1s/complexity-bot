@@ -78,9 +78,12 @@ Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
         
 ## Main function
 async def main():
+
+    # Define files 
     output_folder = f'./reports/{PROJECT_NAME}/'
     complexity_report_file = f'{output_folder}/{PROJECT_NAME}_complexity_report.json'
     summary_file = f'{output_folder}/{PROJECT_NAME}_project_summary.txt'
+    output_schedule_file = f"./{output_folder}/{PROJECT_NAME}_schedule.md"
     
     # Check if the output folder exists, if not create it
     if not os.path.exists(output_folder):
@@ -104,14 +107,13 @@ async def main():
     await save_summary(total_cloc, avg_complexity, median_complexity, adjusted_time_estimate, summary_file, program_counter)
     print(f"Project summary saved to {summary_file} 💾✅")
     
-    # print("Preparing schedule...🗓️")
-    # with open(complexity_report_file, 'r') as file:
-    #     report = json.load(file)
-    # schedule_result = await schedule(adjusted_time_estimate, report)
-    # output_schedule_file = f"./output/{PROJECT_NAME}_schedule.md"
-    # with open(output_schedule_file, 'w') as md_file:
-    #     md_file.write(schedule_result)
-    # print(f"Schedule has been written to {output_schedule_file}💾✅")
+    print("Preparing schedule...🗓️")
+    with open(complexity_report_file, 'r') as file:
+        report = json.load(file)
+    schedule_result = await schedule(adjusted_time_estimate, report)
+    with open(output_schedule_file, 'w') as md_file:
+        md_file.write(schedule_result)
+    print(f"Schedule has been written to {output_schedule_file}💾✅")
     
     print(f"Estimated time for audit and formal verification: {adjusted_time_estimate} week(s) 🗓️✅")
 
