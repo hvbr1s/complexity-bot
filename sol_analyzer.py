@@ -3,7 +3,7 @@ import json
 import asyncio
 import aiofiles
 import subprocess
-from llm.call import get_complexity_score
+from llm.call import get_complexity_score, schedule
 from calculate.summary import calculate_summary_statistics
 from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
 
@@ -66,7 +66,7 @@ async def save_results(results, output_file):
         
 # Function to save summary to a txt file
 async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter):
-    summary = f"""Summary for {PROJECT_NAME} :
+    summary = f"""Summary for {PROJECT_NAME.capitalize()} :
 Total CLOC: {total_cloc}
 Number of files: {program_counter}
 Average Complexity Score: {avg_complexity:.2f}
@@ -78,9 +78,9 @@ Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
         
 ## Main function
 async def main():
-    output_folder = './output'
+    output_folder = f'./output/{PROJECT_NAME}/'
     complexity_report_file = f'{output_folder}/{PROJECT_NAME}_complexity_report.json'
-    summary_file = f'./output/{PROJECT_NAME}_project_summary.txt'
+    summary_file = f'{output_folder}/{PROJECT_NAME}_project_summary.txt'
     
     # Check if the output folder exists, if not create it
     if not os.path.exists(output_folder):
@@ -92,19 +92,28 @@ async def main():
     
     print("Saving complexity report...💾")
     await save_results(results, complexity_report_file)
+    print(f"Analysis complete. Complexity report saved to {complexity_report_file} 💾✅")
     
     print("Calculating summary statistics...🤔")
     total_cloc, avg_complexity, median_complexity = await calculate_summary_statistics(results)
     
     # Calculate adjusted time estimate
     adjusted_time_estimate = await calculate_adjusted_time_estimate_base(total_cloc, avg_complexity)
-    
-    print("Saving project summary...💾")
+
+    print("Saving summary...💾")
     await save_summary(total_cloc, avg_complexity, median_complexity, adjusted_time_estimate, summary_file, program_counter)
+    print(f"Project summary saved to {summary_file} 💾✅")
     
-    print(f"Analysis complete. Complexity report saved to {complexity_report_file} 💾")
-    print(f"Project summary saved to {summary_file} 💾")
-    print(f"Estimated time for audit and formal verification: {adjusted_time_estimate} week(s) 🗓️")
+    # print("Preparing schedule...🗓️")
+    # with open(complexity_report_file, 'r') as file:
+    #     report = json.load(file)
+    # schedule_result = await schedule(adjusted_time_estimate, report)
+    # output_schedule_file = f"./output/{PROJECT_NAME}_schedule.md"
+    # with open(output_schedule_file, 'w') as md_file:
+    #     md_file.write(schedule_result)
+    # print(f"Schedule has been written to {output_schedule_file}💾✅")
+    
+    print(f"Estimated time for audit and formal verification: {adjusted_time_estimate} week(s) 🗓️✅")
 
 # Run the async main function
 if __name__ == "__main__":
