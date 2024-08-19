@@ -3,7 +3,7 @@ import math
 import json
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
-from system.prompt_sol import prepare_sol_prompt
+from system.prompt_sol import prepare_sol_prompt, prepare_sol_prompt_manual_only
 from system.prompt_evm import prepare_evm_prompt
 
 # Load secrets

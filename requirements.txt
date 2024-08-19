@@ -21,7 +21,7 @@ jsonpointer==3.0.0
 langchain-core==0.2.11
 langchain-groq==0.1.6
 langsmith==0.1.83
-openai==1.35.10
+openai==1.40.8
 orjson==3.10.6
 packaging==24.1
 pydantic==2.8.2
