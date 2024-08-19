@@ -7,6 +7,9 @@ from llm.call import get_complexity_score
 from calculate.summary import calculate_summary_statistics
 from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
 
+input = input("👋 Hello there!\nPlease type in the name of the project: ")
+PROJECT_NAME = input.strip().lower()
+
 # Function to run CLOC on 'docs' directories and get Solidity file information
 async def get_solidity_files_info():
     result = subprocess.run(['cloc', './docs', '--json', '--include-lang=Solidity', '--by-file'], capture_output=True, text=True)
@@ -64,7 +67,7 @@ async def save_results(results, output_file):
 # Function to save summary to a txt file
 async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter):
     prover_complexity = int(avg_complexity)/2 
-    summary = f"""Project Summary:
+    summary = f"""Summary for {PROJECT_NAME}:
 Total CLOC: {total_cloc}
 Number of files: {program_counter}
 Average Complexity Score: {avg_complexity:.2f}
@@ -78,8 +81,8 @@ Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
 ## Main function
 async def main():
     output_folder = './output'
-    complexity_report_file = f'{output_folder}/evm_complexity_report.json'
-    summary_file = './output/evm_project_summary.txt'
+    complexity_report_file = f'{output_folder}/{PROJECT_NAME}_complexity_report.json'
+    summary_file = './output/{PROJECT_NAME}_project_summary.txt'
     
     # Check if the output folder exists, if not create it
     if not os.path.exists(output_folder):
