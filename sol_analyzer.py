@@ -78,7 +78,7 @@ Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
         
 ## Main function
 async def main():
-    output_folder = f'./output/{PROJECT_NAME}/'
+    output_folder = f'./reports/{PROJECT_NAME}/'
     complexity_report_file = f'{output_folder}/{PROJECT_NAME}_complexity_report.json'
     summary_file = f'{output_folder}/{PROJECT_NAME}_project_summary.txt'
     
