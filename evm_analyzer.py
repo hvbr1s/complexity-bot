@@ -67,7 +67,7 @@ async def save_results(results, output_file):
 # Function to save summary to a txt file
 async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter):
     prover_complexity = int(avg_complexity)/2 
-    summary = f"""Summary for {PROJECT_NAME}:
+    summary = f"""Summary for {PROJECT_NAME.capitalize()}:
 Total CLOC: {total_cloc}
 Number of files: {program_counter}
 Average Complexity Score: {avg_complexity:.2f}

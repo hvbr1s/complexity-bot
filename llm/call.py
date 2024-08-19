@@ -3,8 +3,9 @@ import math
 import json
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
-from system.prompt_sol import prepare_sol_prompt
+from system.prompt_sol import prepare_sol_prompt, prepare_sol_prompt_manual_only
 from system.prompt_evm import prepare_evm_prompt
+from system.prompt_scheduler import prepare_scheduler_prompt
 
 # Load secrets
 load_dotenv()
@@ -56,3 +57,23 @@ async def get_complexity_score(file_path, file_info, chain):
     except Exception as e:
         print(f"Failed to generate complexity info for {file_path}: {e}")
         return None
+
+# Function to prepare a schedule
+async def schedule(adjusted_time_estimate, report):
+    try:
+        system_prompt = await prepare_scheduler_prompt(adjusted_time_estimate)
+        string_report = json.dumps(report)
+        response = await openai_client.chat.completions.create(
+            temperature=0.0,
+            model=openai_model_prod,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": string_report}
+            ],
+            timeout=60,
+        )
+        schedule = response.choices[0].message.content
+        return schedule
+    except Exception as e:
+        print(e)
+        return("Oops, I wasn't able to schedule this audit")
