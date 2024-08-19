@@ -80,9 +80,9 @@ Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
         
 ## Main function
 async def main():
-    output_folder = './output'
+    output_folder = f'./reports/{PROJECT_NAME}/'
     complexity_report_file = f'{output_folder}/{PROJECT_NAME}_complexity_report.json'
-    summary_file = './output/{PROJECT_NAME}_project_summary.txt'
+    summary_file = f'{output_folder}/{PROJECT_NAME}_project_summary.txt'
     
     # Check if the output folder exists, if not create it
     if not os.path.exists(output_folder):
