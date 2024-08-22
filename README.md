@@ -12,6 +12,7 @@
 6. **Start the analysis bot:**
    - For a Solana project, run `python3 sol_analyzer.py`.
    - For a Solidity project, run `python3 evm_analyzer.py`.
+   - For a Move project, run `python3 move_analyzer.py`.
 7. **Enter the project name when prompted:** Ensure you only type one word.
 8. **Generated reports will be placed in `./reports` directory:**
    - A summary including the estimated number of weeks and the overall complexity of the project.
