@@ -83,7 +83,7 @@ async def main():
     output_folder = f'./reports/{PROJECT_NAME}/'
     complexity_report_file = f'{output_folder}{PROJECT_NAME}_complexity_report.json'
     summary_file = f'{output_folder}{PROJECT_NAME}_project_summary.txt'
-    output_schedule_file = f"./{output_folder}{PROJECT_NAME}_schedule.md"
+    output_schedule_file = f"{output_folder}{PROJECT_NAME}_schedule.md"
     
     # Check if the output folder exists, if not create it
     if not os.path.exists(output_folder):
@@ -110,7 +110,7 @@ async def main():
     print("Preparing schedule...🗓️")
     with open(complexity_report_file, 'r') as file:
         report = json.load(file)
-    schedule_result = await schedule(adjusted_time_estimate, report, project_name=PROJECT_NAME.capitalize())
+    schedule_result = await schedule(adjusted_time_estimate, report, PROJECT_NAME.capitalize())
     with open(output_schedule_file, 'w') as md_file:
         md_file.write(schedule_result)
     print(f"Schedule has been written to {output_schedule_file}💾✅")

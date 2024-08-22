@@ -62,9 +62,9 @@ async def get_complexity_score(file_path, file_info, chain):
         return None
 
 # Function to prepare a schedule
-async def schedule(adjusted_time_estimate, report):
+async def schedule(adjusted_time_estimate, report, project_name):
     try:
-        system_prompt = await prepare_scheduler_prompt(adjusted_time_estimate)
+        system_prompt = await prepare_scheduler_prompt(adjusted_time_estimate, project_name)
         string_report = json.dumps(report)
         response = await openai_client.chat.completions.create(
             temperature=0.0,
