@@ -70,9 +70,9 @@ async def save_summary(total_cloc, avg_complexity, median_complexity, time_estim
     summary = f"""Summary for {PROJECT_NAME.capitalize()}:
 Total CLOC: {total_cloc}
 Number of files: {program_counter}
-Average Complexity Score: {avg_complexity:.2f}
-Median Complexity Score: {median_complexity:.2f}
-How complicated is it for the Prover? {str(prover_complexity)} 
+Average Complexity Score: {avg_complexity:.2f}/10
+Median Complexity Score: {median_complexity:.2f}/10
+How complicated is it for the Prover? {str(prover_complexity)}/5 
 Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
 """
     async with aiofiles.open(output_file, 'w') as f:
