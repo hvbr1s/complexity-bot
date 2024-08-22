@@ -90,7 +90,7 @@ async def main():
     # Define files 
     output_folder = f'./reports/{PROJECT_NAME}/'
     complexity_report_file = f'{output_folder}{PROJECT_NAME}_complexity_report.json'
-    summary_file = f'{output_folder}/{PROJECT_NAME}_project_summary.txt'
+    summary_file = f'{output_folder}{PROJECT_NAME}_project_summary.txt'
     output_schedule_file = f"./{output_folder}{PROJECT_NAME}_schedule.md"
     
     # Check if the output folder exists, if not create it
