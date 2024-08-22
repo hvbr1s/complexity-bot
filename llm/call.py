@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from system.prompt_sol import prepare_sol_prompt, prepare_sol_prompt_manual_only
 from system.prompt_evm import prepare_evm_prompt
+from system.prompt_move import prepare_move_prompt
 from system.prompt_scheduler import prepare_scheduler_prompt
 
 # Load secrets
@@ -29,6 +30,8 @@ async def get_complexity_score(file_path, file_info, chain):
             system_prompt = await prepare_sol_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio)
         elif chain == "evm":
             system_prompt= await prepare_evm_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio)
+        elif chain == "move":
+            system_prompt= await prepare_move_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio)
 
         response = await openai_client.chat.completions.create(
             temperature=0.0,

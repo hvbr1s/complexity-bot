@@ -12,7 +12,13 @@ PROJECT_NAME = input.strip().lower()
 
 # Function to run CLOC on 'docs' directories and get Solidity file information
 async def get_solidity_files_info():
-    result = subprocess.run(['cloc', './docs', '--json', '--include-lang=Solidity', '--by-file'], capture_output=True, text=True)
+    result = subprocess.run([
+        'cloc',
+        './docs',
+        '--read-lang-def=move_lang_def.txt',
+        '--json',
+        '--by-file'
+    ], capture_output=True, text=True)
     cloc_output = json.loads(result.stdout)
     
     solidity_files = {}
@@ -44,7 +50,7 @@ async def analyze_rust_programs():
     program_counter = 0
     
     for file_path, file_info in solidity_files.items():
-        score, rationale, code_lines, code_to_comment_ratio = await get_complexity_score(file_path, file_info, chain="evm")
+        score, rationale, code_lines, code_to_comment_ratio = await get_complexity_score(file_path, file_info, chain="move")
         program_counter += 1
         if score is not None:
             results.append({
@@ -92,7 +98,7 @@ async def main():
         os.makedirs(output_folder)
         print(f"Created output folder: {output_folder} 📁")
     
-    print("Analyzing Solidity files...🕵️‍♂️")
+    print("Analyzing Move files...🕵️‍♂️")
     results, program_counter = await analyze_rust_programs()
     
     print("Saving complexity report...💾")
