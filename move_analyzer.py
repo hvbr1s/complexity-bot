@@ -10,12 +10,12 @@ from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calcu
 input = input("👋 Hello there!\nPlease type in the name of the project: ")
 PROJECT_NAME = input.strip().lower()
 
-# Function to run CLOC on 'docs' directories and get Solidity file information
-async def get_solidity_files_info():
+# Function to run CLOC on 'docs' directories and get Move file information
+async def get_move_files_info():
     result = subprocess.run([
         'cloc',
         './docs',
-        '--read-lang-def=move_lang_def.txt',
+        '--read-lang-def=./lang_files/move_lang_def.txt',
         '--json',
         '--by-file'
     ], capture_output=True, text=True)
@@ -44,8 +44,8 @@ async def get_solidity_files_info():
     return solidity_files
 
 # Function to analyze all Solidity files
-async def analyze_rust_programs():
-    solidity_files = await get_solidity_files_info()
+async def analyze_move_files():
+    solidity_files = await get_move_files_info()
     results = []
     program_counter = 0
     
@@ -91,7 +91,7 @@ async def main():
     output_folder = f'./reports/{PROJECT_NAME}/'
     complexity_report_file = f'{output_folder}{PROJECT_NAME}_complexity_report.json'
     summary_file = f'{output_folder}{PROJECT_NAME}_project_summary.txt'
-    output_schedule_file = f"./{output_folder}{PROJECT_NAME}_schedule.md"
+    output_schedule_file = f"{output_folder}{PROJECT_NAME}_schedule.md"
     
     # Check if the output folder exists, if not create it
     if not os.path.exists(output_folder):
@@ -99,7 +99,7 @@ async def main():
         print(f"Created output folder: {output_folder} 📁")
     
     print("Analyzing Move files...🕵️‍♂️")
-    results, program_counter = await analyze_rust_programs()
+    results, program_counter = await analyze_move_files()
     
     print("Saving complexity report...💾")
     await save_results(results, complexity_report_file)
@@ -118,7 +118,7 @@ async def main():
     print("Preparing schedule...🗓️")
     with open(complexity_report_file, 'r') as file:
         report = json.load(file)
-    schedule_result = await schedule(adjusted_time_estimate, report)
+    schedule_result = await schedule(adjusted_time_estimate, report, PROJECT_NAME.capitalize())
     with open(output_schedule_file, 'w') as md_file:
         md_file.write(schedule_result)
     print(f"Schedule has been written to {output_schedule_file}💾✅")
