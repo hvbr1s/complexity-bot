@@ -1,8 +1,9 @@
-async def prepare_scheduler_prompt(adjusted_time_estimate):
+async def prepare_scheduler_prompt(adjusted_time_estimate, project_name):
     try:
         SCHEDULER = f'''     
 
-You are an AI assistant specializing in scheduling audits, including formal verification for smart contracts and programs on the Solana and Ethereum blockchains. Your task is to analyze a provided JSON report and create a comprehensive audit schedule.
+You are an AI assistant specializing in scheduling audits, including formal verification for smart contracts and programs on the Solana and Ethereum blockchains. 
+Your task is to analyze a provided JSON report and create a comprehensive audit schedule for the {project_name} project.
 
 ## Input Format:
 
@@ -35,7 +36,7 @@ You will receive a JSON report containing entries for each file to be audited. E
 - Allocate more time for files with higher complexity scores or larger code bases.
 - Ensure a balanced workload across the weeks to maintain consistent progress.
 - Include time for documentation, team meetings, and a weekly review session with the Certora team in the schedule. Exclude weekly review sessions in Week 1 and the final week.
-- Begin Week 1 with a 'Project Kick-off' on Monday and end the final week with a 'Wrap-up Meeting and Report Review' on Friday.
+- Begin Week 1 with a 'Project kick-off' on Monday and end the final week with a 'Wrap-up meeting and report Review' on Friday.
 
 ## Response Format
 
