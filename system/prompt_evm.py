@@ -27,7 +27,6 @@ When provided with the Ethereum smart contract to analyze, consider the followin
 
 3. IMPORTANTLY, evaluate the contract's potential challenges for formal verification, considering:
   - Higher complexity when formally verifying non-linear arithmetic due to SMT limitations
-  - Presence of floating-point operations vs. fixed-point arithmetic
   - Implementation of non-linear mathematical operations
   - Number and length of copy-loops produced by the solidity compiler due to complex data structures
 
