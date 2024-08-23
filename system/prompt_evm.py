@@ -26,42 +26,48 @@ When provided with the Ethereum smart contract to analyze, consider the followin
      * > 1000 lines: Very large
 
 3. IMPORTANTLY, evaluate the contract's potential challenges for formal verification, considering:
-   - Higher complexity when formally verifying non-linear math
-   - Presence of floating-point operations vs. fixed-point arithmetic
-   - Implementation of non-linear mathematical operations
+  - Higher complexity when formally verifying non-linear arithmetic due to SMT limitations
+  - Presence of floating-point operations vs. fixed-point arithmetic
+  - Implementation of non-linear mathematical operations
+  - Number and length of copy-loops produced by the solidity compiler due to complex data structures
 
 4. Assess the following Ethereum-specific complexity factors:
-   - Use of delegate calls
-   - Presence of assembly code
-   - Implementation of low-level calls
-   - Number and complexity of state variables
-   - Use of complex data structures (mappings, nested mappings, structs)
-   - Implementation of upgradeable contracts
+  - Use of delegate calls
+  - Presence of assembly code
+  - Implementation of low-level calls
+  - Number and complexity of state variables
+  - Use of complex data structures (mappings, nested mappings, structs, byte arrays)
+  - Implementation of upgradeable contracts and proxy patterns
+  - Interdependencies between contracts potentially due to proxy patterns
 
 5. Consider the number of calls to other contracts, the more calls the more complex the contract:
    - Direct function call (example: `OtherContract(address).functionName();`)
    - Low-level call (example: `address(contractAddress).call(abi.encodeWithSignature("functionName(uint256)", arg));`)
    - Interface-based call (example: `IContractInterface(address).functionName();`)
-   - Using 'this' for external calls within the same contract (example: `this.functionName();`)
    - Library usage (example: `LibraryName.functionName();`)
-   - Contract creation via 'new' keyword (example: `ContractName newContract = new ContractName(constructorArgs);`)
-   - Event emission (example: `emit EventName(parameters);`)
+   - Delegate calls from Contract B to Contract A (example: ```function delegateCallToContractA(uint256 _data) public {{
+        // Perform delegate call to Contract A’s setData function
+        (bool success, ) = contractAAddress.delegatecall(abi.encodeWithSignature(“setData(uint256)“, _data));
+        require(success, “Delegate call failed”);
+    }}`
+   - Using ‘this’ for external calls within the same contract (example: `address(this)`)
 
-5. Consider security-focused elements:
+6. Consider security-focused elements:
    - Proper access control mechanisms
    - Correct implementation of the checks-effects-interactions pattern
    - Handling of ETH transfers and potential re-entrancy vulnerabilities
 
-6. Analyze external dependencies:
+7. Analyze external dependencies:
    - Number and nature of imported contracts or libraries
    - Use of established libraries (e.g., OpenZeppelin) vs custom implementations
+   - Contract constructor dependencies and general inheritance structure, the more inherited the more complex
 
-7. Identify critical functions:
+8. Identify critical functions:
    - Locate and briefly note the most complex or security-critical functions
 
-8. Evaluate the percentage of the code that is commented, the higher the percentage the better.
+9. Evaluate the percentage of the code that is commented, the higher the percentage the better.
 
-9. Assign a complexity score from 1 to 10, where:
+10. Assign a complexity score from 1 to 10, where:
     1-3: Simple contract with straightforward logic and easily formally verified code.
     4-6: Moderate complexity contract with potential security considerations.
     7-10: High complexity contract with delegate calls, assembly, complex state management, and non-linear mathematics that are difficult to formally verify.
