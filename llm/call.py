@@ -2,7 +2,7 @@ import os
 import math
 import json
 from dotenv import load_dotenv
-from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 from system.prompt_sol import prepare_sol_prompt, prepare_sol_prompt_manual_only
 from system.prompt_evm import prepare_evm_prompt
 from system.prompt_move import prepare_move_prompt
@@ -12,38 +12,34 @@ from system.prompt_scheduler import prepare_scheduler_prompt
 load_dotenv()
 
 # Set up OpenAI
-openai_key = os.environ['OPENAI_API_KEY']
-openai_client = AsyncOpenAI(api_key=openai_key)
-openai_model_prod = "gpt-4o-2024-08-06"
-openai_model_stg = "chatgpt-4o-latest"
+claude_client = AsyncAnthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
+claude_model_prod = "claude-3-5-sonnet-20240620"
 
 # Function to run the bot on a file and get the complexity score
 async def get_complexity_score(file_path, file_info, chain):
     try:
-        file = file_info['file_content']
+        code = file_info['file_content']
         code_lines = str(file_info['code_lines'])
         comment_lines = str(file_info['comment_lines'])
         # Compute code to comment ratio
         code_to_comment_ratio = math.ceil((int(comment_lines) / int(code_lines)) * 100)
         # Prepare system prompt based on chain
         if chain == "sol":
-            system_prompt = await prepare_sol_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio)
+            system_prompt = await prepare_sol_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
         elif chain == "evm":
-            system_prompt= await prepare_evm_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio)
+            system_prompt= await prepare_evm_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
         elif chain == "move":
-            system_prompt= await prepare_move_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio)
+            system_prompt= await prepare_move_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
 
-        response = await openai_client.chat.completions.create(
+        response = await claude_client.chat.completions.create(
             temperature=0.0,
-            model=openai_model_prod,
+            model=claude_model_prod,
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": file}
+                {"role": "user", "content": system_prompt}
             ],
-            response_format= { "type": "json_object" },
-            timeout=60,
+            max_tokens=1048
         )
-        content = response.choices[0].message.content
+        content = response.content[0].text
         parsed_content = json.loads(content)
         score = parsed_content.get("complexity")
         rationale = parsed_content.get("rationale")
@@ -64,18 +60,18 @@ async def get_complexity_score(file_path, file_info, chain):
 # Function to prepare a schedule
 async def schedule(adjusted_time_estimate, report, project_name):
     try:
-        system_prompt = await prepare_scheduler_prompt(adjusted_time_estimate, project_name)
         string_report = json.dumps(report)
-        response = await openai_client.chat.completions.create(
+        system_prompt = await prepare_scheduler_prompt(adjusted_time_estimate, project_name, string_report)
+        response = await claude_client.chat.completions.create(
             temperature=0.0,
-            model=openai_model_prod,
+            model=claude_model_prod,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": string_report}
             ],
-            timeout=60,
+            max_tokens=	8192
         )
-        schedule = response.choices[0].message.content
+        schedule = response.content[0].text
         return schedule
     except Exception as e:
         print(e)

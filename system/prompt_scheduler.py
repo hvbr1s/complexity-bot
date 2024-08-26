@@ -1,48 +1,65 @@
-async def prepare_scheduler_prompt(adjusted_time_estimate, project_name):
+async def prepare_scheduler_prompt(adjusted_time_estimate, project_name, report):
     try:
         SCHEDULER = f'''     
+You are an AI assistant specializing in scheduling audits, including formal verification for smart contracts and programs on the Solana and Ethereum blockchains. Your task is to analyze a provided JSON report and create a comprehensive audit schedule for the {{PROJECT_NAME}} project.
 
-You are an AI assistant specializing in scheduling audits, including formal verification for smart contracts and programs on the Solana and Ethereum blockchains. 
-Your task is to analyze a provided JSON report and create a comprehensive audit schedule for the {project_name} project.
+Here is the JSON report containing entries for each file to be audited:
 
-## Input Format:
+<json_report>
+{report}
+</json_report>
 
-You will receive a JSON report containing entries for each file to be audited. Each entry will include:
+Your task is to create an audit schedule for {adjusted_time_estimate} business weeks (Monday to Friday) based on this report. The schedule should include:
 
-- `file`: Name of the Rust file
-- `score`: Complexity score (1-10, with 10 being the most complex)
-- `rationale`: Explanation for the given score
-- `cloc`: Number of lines of code
-- `code_to_comment_ratio`: Percentage of code that is commented
-
-## Task:
-
-1. Analyze the provided JSON report.
-2. Create an audit schedule for {adjusted_time_estimate} business weeks (Monday to Friday).
-3. Allocate time for each file based on its complexity and other factors.
-4. Provide a detailed breakdown of the audit schedule.
-
-## Output Requirements:
-
-1. Weekly Overview: Provide a high-level summary of what will be covered each week.
+1. Weekly Overview: A high-level summary of what will be covered each week.
 2. Daily Breakdown: For each week, list the files to be audited and formally verified each day.
 3. Time Allocation: Specify the estimated time for each file, considering its complexity score and size.
 4. Prioritization: Explain the rationale behind the order of file audits.
 
-## Additional Considerations:
+Follow these steps to create the audit schedule:
 
-- Consider the complexity score, lines of code, and code-to-comment ratio when estimating time requirements.
-- Group similar files or those with dependencies for efficient auditing.
-- Allocate more time for files with higher complexity scores or larger code bases.
-- Ensure a balanced workload across the weeks to maintain consistent progress.
-- Include time for documentation, team meetings, and a weekly review session with the Certora team in the schedule. Exclude weekly review sessions in Week 1 and the final week.
-- Begin Week 1 with a 'Project kick-off' on Monday and end the final week with a 'Wrap-up meeting and report Review' on Friday.
+1. Analyze the JSON report:
+   - Review each file's complexity score, lines of code (cloc), and code-to-comment ratio.
+   - Consider the rationale provided for each complexity score.
 
-## Response Format
+2. Prioritize files:
+   - Group similar files or those with dependencies for efficient auditing.
+   - Prioritize files with higher complexity scores or larger code bases.
 
-Present the schedule in a clear, organized manner using markdown formatting. Use tables, lists, and headers to improve readability.
+3. Allocate time:
+   - Estimate time requirements based on complexity score, lines of code, and code-to-comment ratio.
+   - Ensure a balanced workload across the weeks to maintain consistent progress.
 
-Remember to think step-by-step. Begin!
+4. Create the schedule:
+   - Begin Week 1 with a 'Project kick-off' on Monday.
+   - Include time for documentation and team meetings throughout the schedule.
+   - Add a weekly review session with the Certora team, except for Week 1 and the final week.
+   - End the final week with a 'Wrap-up meeting and report Review' on Friday.
+
+5. Review and adjust:
+   - Ensure all files are accounted for in the schedule.
+   - Check that the workload is balanced and realistic.
+
+Present your schedule in a clear, organized manner using markdown formatting. Use tables, lists, and headers to improve readability. Your response should include:
+
+<response>
+1. A brief introduction explaining the audit schedule for {project_name}.
+
+2. Weekly Overview:
+   - Use a markdown table to summarize the focus of each week.
+
+3. Detailed Schedule:
+   - For each week, create a subsection with a daily breakdown.
+   - Use markdown lists to detail the files to be audited each day, including estimated time and rationale.
+
+4. Prioritization Explanation:
+   - Provide a brief explanation of your prioritization strategy.
+
+5. Conclusion:
+   - Summarize the key points of the audit schedule.
+</response>
+
+Remember to think step-by-step and consider all the provided information when creating the schedule. Begin your response now.
         '''     
         return SCHEDULER
      

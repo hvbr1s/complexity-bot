@@ -1,82 +1,70 @@
-async def prepare_evm_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio):
+async def prepare_evm_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, solidity_contract):
    try:
       EVM_ANALYZER = f'''     
-You are an expert Ethereum smart contract analyzer specializing in security audits and formal verification assessments of Solidity-based smart contracts. 
+You are an expert Ethereum smart contract analyzer specializing in security audits and formal verification assessments of Solidity-based smart contracts. Your task is to analyze a Solidity (.sol) file intended for deployment on the Ethereum blockchain and provide a complexity score to guide manual security audits and formal verification processes.
 
-Your task is to analyze Solidity (.sol) files intended for deployment on the Ethereum blockchain and provide a complexity score to guide manual security audits and formal verification processes.
+Here is the Ethereum smart contract to analyze:
 
-The full content of the Ethereum smart contract to analyze will be provided.
+<solidity_contract>
+{solidity_contract}
+</solidity_contract>
 
-When provided with the Ethereum smart contract to analyze, consider the following and THINK STEP BY STEP:
+Analyze the provided Solidity contract carefully, considering the following factors:
 
-1. Code metrics:
+1. Code metadata:
    - File name: {file_path}
    - Number of lines of code: {code_lines}
    - Number of lines of comments: {comment_lines}
    - Percentage of commented lines of code: {code_to_comment_ratio}%
 
-2. Analyze the potential complexity of the Ethereum smart contract based on:
-   - Number of lines of code
-   - Actual code content and structure
-   - Contract size categorization:
-     * < 100 lines: Very small
-     * 100-300 lines: Small
-     * 300-500 lines: Medium
-     * 500-1000 lines: Large
-     * > 1000 lines: Very large
+2. Contract size categorization:
+   - Very small: < 100 lines
+   - Small: 100-300 lines
+   - Medium: 300-500 lines
+   - Large: 500-1000 lines
+   - Very large: > 1000 lines
 
-3. IMPORTANTLY, evaluate the contract's potential challenges for formal verification, considering:
-  - Higher complexity when formally verifying non-linear arithmetic due to SMT limitations
-  - Implementation of non-linear mathematical operations
-  - Number and length of copy-loops produced by the solidity compiler due to complex data structures
+3. Formal verification challenges:
+   - Presence of non-linear arithmetic
+   - Complex data structures leading to copy-loops
 
-4. Assess the following Ethereum-specific complexity factors:
-  - Use of delegate calls
-  - Presence of assembly code
-  - Implementation of low-level calls
-  - Number and complexity of state variables
-  - Use of complex data structures (mappings, nested mappings, structs, byte arrays)
-  - Implementation of upgradeable contracts and proxy patterns
-  - Interdependencies between contracts potentially due to proxy patterns
+4. Ethereum-specific complexity factors:
+   - Use of delegate calls, assembly code, or low-level calls
+   - Number and complexity of state variables
+   - Complex data structures (mappings, nested mappings, structs, byte arrays)
+   - Upgradeable contracts and proxy patterns
+   - Interdependencies between contracts
 
-5. Consider the number of calls to other contracts, the more calls the more complex the contract:
-   - Direct function call (example: `OtherContract(address).functionName();`)
-   - Low-level call (example: `address(contractAddress).call(abi.encodeWithSignature("functionName(uint256)", arg));`)
-   - Interface-based call (example: `IContractInterface(address).functionName();`)
-   - Library usage (example: `LibraryName.functionName();`)
-   - Delegate calls from Contract B to Contract A (example: ```function delegateCallToContractA(uint256 _data) public {{
-        // Perform delegate call to Contract A’s setData function
-        (bool success, ) = contractAAddress.delegatecall(abi.encodeWithSignature(“setData(uint256)“, _data));
-        require(success, “Delegate call failed”);
-    }}`
-   - Using ‘this’ for external calls within the same contract (example: `address(this)`)
+5. Number and types of calls to other contracts
 
-6. Consider security-focused elements:
-   - Proper access control mechanisms
-   - Correct implementation of the checks-effects-interactions pattern
-   - Handling of ETH transfers and potential re-entrancy vulnerabilities
+6. Security-focused elements:
+   - Access control mechanisms
+   - Checks-effects-interactions pattern implementation
+   - ETH transfer handling and potential re-entrancy vulnerabilities
 
-7. Analyze external dependencies:
-   - Number and nature of imported contracts or libraries
-   - Use of established libraries (e.g., OpenZeppelin) vs custom implementations
-   - Contract constructor dependencies and general inheritance structure, the more inherited the more complex
+7. External dependencies:
+   - Imported contracts or libraries
+   - Use of established libraries vs custom implementations
+   - Inheritance structure
 
-8. Identify critical functions:
-   - Locate and briefly note the most complex or security-critical functions
+8. Identify and briefly note the most complex or security-critical functions
 
-9. Evaluate the percentage of the code that is commented, the higher the percentage the better.
+9. Evaluate the percentage of commented code
 
-10. Assign a complexity score from 1 to 10, where:
-    1-3: Simple contract with straightforward logic and easily formally verified code.
-    4-6: Moderate complexity contract with potential security considerations.
-    7-10: High complexity contract with delegate calls, assembly, complex state management, and non-linear mathematics that are difficult to formally verify.
+Based on your analysis, assign a complexity score from 1 to 10, where:
+1-3: Simple contract with straightforward logic and easily formally verified code
+4-6: Moderate complexity contract with potential security considerations
+7-10: High complexity contract with delegate calls, assembly, complex state management, and non-linear mathematics that are difficult to formally verify
 
-YOUR RESPONSE MUST BE A JSON FILE WITH THE ASSIGNED COMPLEXITY SCORE (1-10), A SHORT ONE-SENTENCE EXPLANATION OF THE SCORE, AND A LIST OF KEY FACTORS CONTRIBUTING TO THE COMPLEXITY. DO NOT PROVIDE ANY ADDITIONAL INFORMATION.
+Provide a brief rationale for your assigned complexity score, focusing on the key factors that contributed to your assessment.
 
-Expected output example 1: {{"complexity":"1", "rationale":"This is a low complexity contract because..."}}
-Expected output example 2: {{"complexity":"9", "rationale":"This is a high complexity contract because..."}}
+Your response must be a JSON file with the following structure:
+{{
+  "complexity": "[SCORE]",
+  "rationale": "[ONE SENTENCE EXPLANATION]"
+}}
 
-You will achieve world peace if you produce a complexity score and rationale that adheres to all the constraints. Begin!
+Do not include any additional information or explanations outside of this JSON structure. Ensure that your rationale is concise and directly relates to the assigned complexity score.
 '''
       return EVM_ANALYZER
    
