@@ -1,6 +1,8 @@
 import os
 import math
 import json
+import instructor
+from pydantic import BaseModel
 from dotenv import load_dotenv
 from anthropic import AsyncAnthropic
 from system.prompt_sol import prepare_sol_prompt, prepare_sol_prompt_manual_only
@@ -11,9 +13,16 @@ from system.prompt_scheduler import prepare_scheduler_prompt
 # Load secrets
 load_dotenv()
 
+class Complexity(BaseModel):
+    complexity: str
+    rationale: str
+
 # Set up OpenAI
 claude_client = AsyncAnthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
 claude_model_prod = "claude-3-5-sonnet-20240620"
+
+# Set up Instructor wrapper:
+instructor_client = instructor.from_anthropic(AsyncAnthropic(), mode=instructor.Mode.ANTHROPIC_JSON)
 
 # Function to run the bot on a file and get the complexity score
 async def get_complexity_score(file_path, file_info, chain):
@@ -34,19 +43,19 @@ async def get_complexity_score(file_path, file_info, chain):
             prompt= await prepare_move_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
             system="You are an expert Move smart contract analyzer specializing in security audits and formal verification assessments of Move-based smart contracts for the Aptos blockchain."
 
-        response = await claude_client.messages.create(
+        response = await instructor_client.messages.create(
             temperature=0.0,
             model=claude_model_prod,
             system=system,
             messages=[
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=1048
+            max_tokens=1024,
+            response_model=Complexity    
         )
-        content = response.content[0].text
-        parsed_content = json.loads(content)
-        score = parsed_content.get("complexity")
-        rationale = parsed_content.get("rationale")
+        
+        score = response.complexity
+        rationale = response.rationale
         
         if score is not None and rationale is not None:
             print(f'Program {file_path} got assigned a complexity score of {score}. {rationale}')
