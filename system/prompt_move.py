@@ -1,8 +1,6 @@
 async def prepare_move_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio):
    try:
       MOVE_ANALYZER = f'''     
-You are an expert Move smart contract analyzer specializing in security audits and formal verification assessments of Move-based smart contracts for the Aptos blockchain.
-
 Your task is to analyze Move (.move) files intended for deployment on the Aptos blockchain and provide a complexity score to guide manual security audits and formal verification processes.
 
 The full content of the Move smart contract to analyze will be provided.

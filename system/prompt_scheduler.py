@@ -1,7 +1,7 @@
 async def prepare_scheduler_prompt(adjusted_time_estimate, project_name, report):
     try:
         SCHEDULER = f'''     
-You are an AI assistant specializing in scheduling audits, including formal verification for smart contracts and programs on the Solana and Ethereum blockchains. Your task is to analyze a provided JSON report and create a comprehensive audit schedule for the {{PROJECT_NAME}} project.
+Your task is to analyze a provided JSON report and create a comprehensive audit schedule for the {{PROJECT_NAME}} project.
 
 Here is the JSON report containing entries for each file to be audited:
 

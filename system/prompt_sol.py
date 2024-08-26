@@ -1,9 +1,9 @@
 
 async def prepare_sol_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, rust_code):
     try:
-        SOL_ANALYZER = f'''     
-You are an expert security researcher specializing in manual audits and formal verification of Rust-based Solana programs. Your task is to analyze the following Rust-based program intended for deployment on the Solana blockchain and provide a complexity score to guide manual security audits and formal verification.
-
+        SOL_ANALYZER = f''' 
+Your task is to analyze the following Rust-based program intended for deployment on the Solana blockchain and provide a complexity score to guide manual security audits and formal verification.
+    
 Here is the Rust code to analyze:
 <rust_code>
 {rust_code}

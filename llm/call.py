@@ -25,17 +25,21 @@ async def get_complexity_score(file_path, file_info, chain):
         code_to_comment_ratio = math.ceil((int(comment_lines) / int(code_lines)) * 100)
         # Prepare system prompt based on chain
         if chain == "sol":
-            system_prompt = await prepare_sol_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            prompt = await prepare_sol_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            system= "You are an expert security researcher specializing in manual audits and formal verification of Rust-based Solana programs."
         elif chain == "evm":
-            system_prompt= await prepare_evm_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            prompt= await prepare_evm_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            system="You are an expert Ethereum smart contract analyzer specializing in security audits and formal verification assessments of Solidity-based smart contracts."
         elif chain == "move":
-            system_prompt= await prepare_move_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            prompt= await prepare_move_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            system="You are an expert Move smart contract analyzer specializing in security audits and formal verification assessments of Move-based smart contracts for the Aptos blockchain."
 
-        response = await claude_client.chat.completions.create(
+        response = await claude_client.messages.create(
             temperature=0.0,
             model=claude_model_prod,
+            system=system,
             messages=[
-                {"role": "user", "content": system_prompt}
+                {"role": "user", "content": prompt}
             ],
             max_tokens=1048
         )
@@ -61,13 +65,13 @@ async def get_complexity_score(file_path, file_info, chain):
 async def schedule(adjusted_time_estimate, report, project_name):
     try:
         string_report = json.dumps(report)
-        system_prompt = await prepare_scheduler_prompt(adjusted_time_estimate, project_name, string_report)
-        response = await claude_client.chat.completions.create(
+        prompt = await prepare_scheduler_prompt(adjusted_time_estimate, project_name, string_report)
+        response = await claude_client.messages.create(
             temperature=0.0,
             model=claude_model_prod,
+            system="You are an AI assistant specializing in scheduling audits, including formal verification for smart contracts and programs on the Solana and Ethereum blockchains.",
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": string_report}
+                {"role": "user", "content": prompt}
             ],
             max_tokens=	8192
         )

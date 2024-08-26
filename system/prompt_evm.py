@@ -1,7 +1,7 @@
 async def prepare_evm_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, solidity_contract):
    try:
-      EVM_ANALYZER = f'''     
-You are an expert Ethereum smart contract analyzer specializing in security audits and formal verification assessments of Solidity-based smart contracts. Your task is to analyze a Solidity (.sol) file intended for deployment on the Ethereum blockchain and provide a complexity score to guide manual security audits and formal verification processes.
+      EVM_ANALYZER = f''' 
+Your task is to analyze a Solidity (.sol) file intended for deployment on the Ethereum blockchain and provide a complexity score to guide manual security audits and formal verification processes.
 
 Here is the Ethereum smart contract to analyze:
 
