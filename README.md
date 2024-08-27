@@ -1,6 +1,6 @@
 # Setup
 
-1. **Create a `/docs` folder** at the root of this repository.
+1. **Create a `/files` folder** at the root of this repository.
 2. **Create a `.env` file** and add your `OPENAI_API_KEY` which you can get from [OpenAI's platform](https://platform.openai.com/).
 3. **Set up a Python virtual environment:**
    - Run `python3 -m venv venvbot`.

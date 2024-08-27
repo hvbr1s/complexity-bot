@@ -14,7 +14,7 @@ PROJECT_NAME = input.strip().lower()
 async def get_move_files_info():
     result = subprocess.run([
         'cloc',
-        './docs',
+        './files',
         '--read-lang-def=./lang_files/move_lang_def.txt',
         '--json',
         '--by-file'

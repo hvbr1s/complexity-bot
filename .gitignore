@@ -1,6 +1,6 @@
 .env
 /venvbot
-/docs
+/files
 /bin
 /output
 **/__pycache__

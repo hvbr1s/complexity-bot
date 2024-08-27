@@ -35,7 +35,9 @@ async def calculate_adjusted_time_estimate_base(total_loc, avg_complexity):
     # Step 4: adjust estimation for large but simple code bases
     if total_loc >= 1000 and adjusted_estimate_weeks <= 1:
         adjusted_estimate_weeks += 1 
-    
+    if total_loc <= 1000 and adjusted_estimate_weeks <= 1:
+        adjusted_estimate_weeks = 1
+    print(f'Adjusted estimate weeks: {adjusted_estimate_weeks}')
     # Step 5: Round up to the nearest whole week
     return math.floor(adjusted_estimate_weeks)
 

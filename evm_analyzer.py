@@ -12,7 +12,7 @@ PROJECT_NAME = input.strip().lower()
 
 # Function to run CLOC on 'docs' directories and get Solidity file information
 async def get_solidity_files_info():
-    result = subprocess.run(['cloc', './docs', '--json', '--include-lang=Solidity', '--by-file'], capture_output=True, text=True)
+    result = subprocess.run(['cloc', './files', '--json', '--include-lang=Solidity', '--by-file'], capture_output=True, text=True)
     cloc_output = json.loads(result.stdout)
     
     solidity_files = {}
