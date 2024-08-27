@@ -1,7 +1,7 @@
 # Setup
 
 1. **Create a `/files` folder** at the root of this repository.
-2. **Create a `.env` file** and add your `OPENAI_API_KEY` which you can get from [OpenAI's platform](https://platform.openai.com/).
+2. **Create a `.env` file** and add your `ANTHROPIC_API_KEY` which you can get from [Anthropic's platform](https://console.anthropic.com/).
 3. **Set up a Python virtual environment:**
    - Run `python3 -m venv venvbot`.
    - Activate the virtual environment with `source venvbot/bin/activate`.
