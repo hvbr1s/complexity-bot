@@ -27,7 +27,7 @@ Analyze the potential complexity of the program based on the following criteria,
      * > 1000 lines: Very large
 
 2. Evaluate the program's potential challenges for formal verification:
-   - Look for presence of floating-point operations (f32 or f64) vs. scaled integers
+   - Look for presence of floating-point operations (f32 or f64) vs. scaled integers, the presence of floating points make formal verification extremely difficult.
    - Check for implementation of non-linear mathematical operations (e.g., 'checked_mul', 'checked_div')
    - Identify implementation of complex data structures like Merkle trees, hash tables or binary trees
 
@@ -58,7 +58,6 @@ Analyze the potential complexity of the program based on the following criteria,
 - 1-3: Simple Solana program with straightforward and easily formally verified logic
 - 4-6: Moderate complexity program with potential security considerations
 - 7-10: High complexity program with multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify
-
 </thinking>
 
 Your response must be a JSON file with the following structure:
