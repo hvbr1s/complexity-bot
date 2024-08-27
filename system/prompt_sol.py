@@ -15,8 +15,9 @@ Here is the metadata for the code:
 - Number of lines of comments: {comment_lines}
 - Percentage of commented lines of code: {code_to_comment_ratio}%
 
-Analyze the potential complexity of the program based on the following criteria. Use <thinking> tags to show your step-by-step analysis:
+Analyze the potential complexity of the program based on the following criteria, think step-by-step:
 
+<thinking>
 1. Code metrics and size categorization:
    - Categorize the program size as:
      * < 100 lines: Very small
@@ -53,14 +54,14 @@ Analyze the potential complexity of the program based on the following criteria.
 
 7. Evaluate the percentage of commented code
 
-Based on your analysis, assign a complexity score from 1 to 10, where:
-1-3: Simple Solana program with straightforward and easily formally verified logic
-4-6: Moderate complexity program with potential security considerations
-7-10: High complexity program with multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify
+8. Based on your analysis, assign a complexity score from 1 to 10, where:
+- 1-3: Simple Solana program with straightforward and easily formally verified logic
+- 4-6: Moderate complexity program with potential security considerations
+- 7-10: High complexity program with multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify
 
-Provide a short one-sentence explanation for the assigned score.
+</thinking>
 
-Your final output must be a JSON file with the assigned complexity score (1-10) and a short one-sentence explanation of the score. Use the following format:
+Your response must be a JSON file with the following structure:
 
 <output>
 {{
@@ -69,7 +70,7 @@ Your final output must be a JSON file with the assigned complexity score (1-10) 
 }}
 </output>
 
-Do not provide any additional information outside of the JSON structure.
+Do not include any additional information or explanations outside of this JSON structure. Ensure that your rationale is concise and directly relates to the assigned complexity score.
         '''
         
         return SOL_ANALYZER

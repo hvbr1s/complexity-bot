@@ -37,7 +37,7 @@ async def calculate_adjusted_time_estimate_base(total_loc, avg_complexity):
         adjusted_estimate_weeks += 1 
     
     # Step 5: Round up to the nearest whole week
-    return math.ceil(adjusted_estimate_weeks)
+    return math.floor(adjusted_estimate_weeks)
 
 
 async def calculate_adjusted_time_estimate_loc_weighted(total_loc, avg_complexity):
@@ -89,4 +89,4 @@ async def calculate_adjusted_time_estimate_loc_weighted(total_loc, avg_complexit
         adjusted_estimate_weeks += 1 
     
     # Step 5: Round up to the nearest whole week
-    return math.ceil(adjusted_estimate_weeks)
+    return math.floor(adjusted_estimate_weeks)
