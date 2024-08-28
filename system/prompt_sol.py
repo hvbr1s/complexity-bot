@@ -18,8 +18,7 @@ Here is the metadata for the code:
 Analyze the potential complexity of the program based on the following criteria, think step-by-step:
 
 <thinking>
-1. Code metrics and size categorization:
-   - Categorize the program size as:
+1. Categorize the program size as:
      * < 100 lines: Very small
      * 100-300 lines: Small
      * 300-500 lines: Medium
@@ -30,6 +29,7 @@ Analyze the potential complexity of the program based on the following criteria,
    - Look for presence of floating-point operations (f32 or f64) vs. scaled integers, the presence of floating points make formal verification extremely difficult.
    - Check for implementation of non-linear mathematical operations (e.g., 'checked_mul', 'checked_div')
    - Identify implementation of complex data structures like Merkle trees, hash tables or binary trees
+   - Consider the number of calls to other programs, the more calls the more complex the program:
 
 3. Assess Solana-specific complexity factors:
    - Frequency and complexity of Cross-Program Invocations (CPI) (look for 'invoke' or 'invoke_signed' functions)
@@ -37,21 +37,19 @@ Analyze the potential complexity of the program based on the following criteria,
    - Implementation of complex account validation logic
    - Handling of multiple signers or complex signer validation
    - Reliance on custom libraries over established ones (e.g., SPL library)
-
-4. Consider security-focused elements:
    - Proper handling of account ownership and type checks
    - Correct implementation of rent exemption checks
-   - Number of entry points (e.g., 'pub fn')
 
-5. Analyze external dependencies:
-   - Number and nature of external crates used
-   - Use of the Anchor framework (look for 'use anchor_lang')
-   - Use of Borsh (look for 'use borsh')
-   - Use of Bytemuck (look for 'use bytemuck')
+4. Analyze the code's external dependencies:
+   - Note the number and nature of external crates used
+   - Note that the use of the Anchor framework makes the code easier to read and audit. (look for 'use anchor_lang').
+   - Note that the use of Borsh simplifies serializing and deserializing data structures (look for 'use borsh').
+   - Note that the use of Bytemuck simplifies low-level data manipulation (look for 'use bytemuck').
 
-6. Identify critical functions:
-   - Locate and briefly note the most complex or security-critical functions
+5. Locate and briefly note the most complex or security-critical functions
 
+6. Consider the number of entry points (e.g., 'pub fn'), the more entry points, the more complex to audit and formally verify the program
+   
 7. Evaluate the percentage of commented code
 
 8. Based on your analysis, assign a complexity score from 1 to 10, where:
