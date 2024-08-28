@@ -1,21 +1,12 @@
 async def prepare_scheduler_prompt(adjusted_time_estimate, project_name, report):
     try:
         SCHEDULER = f'''     
-Your task is to analyze a provided JSON report and create a comprehensive audit schedule for the {{PROJECT_NAME}} project.
+Your task is to analyze the provided JSON report and create a comprehensive audit schedule for the {project_name} project. The schedule should cover {adjusted_time_estimate} business weeks (Monday to Friday).
 
 Here is the JSON report containing entries for each file to be audited:
-
 <json_report>
 {report}
 </json_report>
-
-Your task is to create an audit schedule for {adjusted_time_estimate} business weeks (Monday to Friday) based on this report. The schedule should include:
-
-1. Weekly Overview: A high-level summary of what will be covered each week.
-2. Daily Breakdown: For each week, list the files to be audited and formally verified each day.
-3. Time Allocation: Specify the estimated time for each file, considering its complexity score and size.
-4. Prioritization: Explain the rationale behind the order of file audits.
-
 Follow these steps to create the audit schedule:
 
 1. Analyze the JSON report:

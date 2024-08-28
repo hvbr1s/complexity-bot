@@ -10,8 +10,8 @@
 5. **Copy directories and files for analysis** into the `/docs` folder.
    - ⚠️ **Important:** Only include relevant and in-scope `.sol` or `.rs` files. Test files and out of scope contracts should NOT be included.
 6. **Start the analysis bot:**
-   - For a Solana project, run `python3 sol_analyzer.py`.
-   - For a Solidity project, run `python3 evm_analyzer.py`.
+   - For a Solana project, run `make sol`.
+   - For a Solidity project, run `make evm`.
    - For a Move project, run `python3 move_analyzer.py`.
 7. **Enter the project name when prompted:** Ensure you only type one word.
 8. **Generated reports will be placed in `./reports` directory:**
