@@ -6,6 +6,7 @@ import aiofiles
 import subprocess
 from llm.call import get_complexity_score, schedule
 from calculate.summary import calculate_summary_statistics
+from calculate.import_lines import count_import_lines_go
 from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
 
 project = input("👋 Hello there!\nPlease type in the name of the project: ")
@@ -14,11 +15,11 @@ staff = input("👋 Ok!\nHow many security researchers (excluding engineers) wil
 PROJECT_SQUAD = int(staff.strip().lower())
 
 # Function to run CLOC on 'docs' directories and get Solidity file information
-async def get_solidity_files_info():
+async def get_go_files_info():
     result = subprocess.run(['cloc', './files', '--json', '--include-lang=Go', '--by-file'], capture_output=True, text=True)
     cloc_output = json.loads(result.stdout)
     
-    solidity_files = {}
+    go_files = {}
     for file_path, file_info in cloc_output.items():
         if file_path != 'header' and file_path != 'SUM':
             
@@ -29,20 +30,22 @@ async def get_solidity_files_info():
             except IOError as e:
                 print(f"Error reading file {file_path}: {e}")
                 file_content = ""
+            # Count import lines
+            import_lines = await count_import_lines_go(file_content)
             
-            solidity_files[file_path] = {
+            go_files[file_path] = {
                 "file_name": file_path,
-                "code_lines": file_info.get('code', 0),
+                "code_lines": file_info.get('code', 0) - int(import_lines),
                 "comment_lines": file_info.get('comment', 0),
                 "blank_lines": file_info.get('blank', 0),
                 "file_content": file_content
             }
 
-    return solidity_files
+    return go_files
 
 # Function to analyze all Solidity files
-async def analyze_rust_programs():
-    solidity_files = await get_solidity_files_info()
+async def analyze_go_files():
+    solidity_files = await get_go_files_info()
     results = []
     program_counter = 0
     
@@ -95,7 +98,7 @@ async def main():
         print(f"Created output folder: {output_folder} 📁")
     
     print("Analyzing Go files...🕵️‍♂️")
-    results, program_counter = await analyze_rust_programs()
+    results, program_counter = await analyze_go_files()
     
     await save_results(results, complexity_report_file)
     print(f"Analysis complete. Complexity report saved to {complexity_report_file} 💾✅")
