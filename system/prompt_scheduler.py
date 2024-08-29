@@ -22,10 +22,10 @@ Follow these steps to create the audit schedule:
    - Ensure a balanced workload across the weeks to maintain consistent progress.
 
 4. Create the schedule:
-   - Begin Week 1 with a 'Project kick-off' on Monday.
+   - Begin Week 1 with a 1-hour 'Project kick-off' on Monday.
    - Include time for documentation and team meetings throughout the schedule.
-   - Add a weekly review session with the Certora team, except for Week 1 and the final week.
-   - End the final week with a 'Wrap-up meeting and report Review' on Friday.
+   - Add a weekly 1-hour progress review session between the {project_name} team and the Certora team, except for Week 1 and the final week.
+   - End the final week with a 2-hour 'Wrap-up meeting and report Review' on Friday.
 
 5. Review and adjust:
    - Ensure all files are accounted for in the schedule.

@@ -5,6 +5,7 @@ import aiofiles
 import subprocess
 from llm.call import get_complexity_score, schedule
 from calculate.summary import calculate_summary_statistics
+from calculate.import_lines import count_import_lines_rust
 from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
 
 input = input("👋 Hello there!\nPlease type in the name of the project: ")
@@ -26,10 +27,13 @@ async def get_rust_files_info():
             except IOError as e:
                 print(f"Error reading file {file_path}: {e}")
                 file_content = ""
+                
+            # Count import lines
+            import_lines = count_import_lines_rust(file_content)
             
             rust_files[file_path] = {
                 "file_name": file_path,
-                "code_lines": file_info.get('code', 0),
+                "code_lines": file_info.get('code', 0) - int(import_lines),
                 "comment_lines": file_info.get('comment', 0),
                 "blank_lines": file_info.get('blank', 0),
                 "file_content": file_content

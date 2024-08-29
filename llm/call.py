@@ -8,6 +8,7 @@ from anthropic import AsyncAnthropic
 from system.prompt_sol import prepare_sol_prompt, prepare_sol_prompt_manual_only
 from system.prompt_evm import prepare_evm_prompt
 from system.prompt_move import prepare_move_prompt
+from system.prompt_go import prepare_go_prompt
 from system.prompt_scheduler import prepare_scheduler_prompt
 
 # Load secrets
@@ -42,6 +43,9 @@ async def get_complexity_score(file_path, file_info, chain):
         elif chain == "move":
             prompt= await prepare_move_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
             system="You are an expert Move smart contract analyzer specializing in security audits and formal verification assessments of Move-based smart contracts for the Aptos blockchain."
+        elif chain == "go":
+            prompt= await prepare_go_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            system="You are an expert security researcher specializing in manual audits of Go-based projects intended to interact with the Ethereum ecosystem."
 
         response = await instructor_client.messages.create(
             temperature=0.0,
