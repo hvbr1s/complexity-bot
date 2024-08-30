@@ -1,4 +1,4 @@
-.PHONY: evm sol move go
+.PHONY: evm sol move go app
 
 evm:
 	python3 evm_analyzer.py
@@ -11,3 +11,6 @@ move:
 	
 go:
 	python3 go_analyzer.py
+
+app: 
+	python3 app.py
