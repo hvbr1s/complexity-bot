@@ -8,11 +8,15 @@ from calculate.summary import calculate_summary_statistics
 from calculate.import_lines import count_import_lines_solidity
 from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
 
-project = input("👋 Hello there!\nPlease type in the name of the project: ")
-PROJECT_NAME = project.strip().lower()
-ecosystem = input("👋 Ok!\nWhat ecosystem is the project based on, choose SOL, EVM or GO: ")
-LANGUAGE = str(ecosystem.strip().lower())
-print(f"Ok, let's analyze {PROJECT_NAME} written in {LANGUAGE}.")
+PROJECT_NAME = input("👋 Welcome! Please enter the project name: ").strip().lower()
+while True:
+    ecosystem = input("🌐 Great! Which ecosystem is the project based on? (SOL/EVM/MOVE/GO): ").strip().lower()
+    if ecosystem in ["sol", "evm", "move", "go"]:
+        LANGUAGE = ecosystem
+        break
+    else:
+        print("❌ Invalid input. Please choose SOL, EVM, MOVE, or GO.")
+print(f"🚀 Excellent! Let's analyze {PROJECT_NAME.capitalize()} built on the {LANGUAGE.upper()} ecosystem.")
 
 # Function to run CLOC on 'docs' directories and get Solidity file information
 async def get_files_info(language):
@@ -20,12 +24,14 @@ async def get_files_info(language):
         result = subprocess.run(['cloc', './files', '--json', '--include-lang=Solidity', '--by-file'], capture_output=True, text=True)
     elif language == 'sol':
         result = subprocess.run(['cloc', './files', '--json', '--include-lang=Rust', '--by-file'], capture_output=True, text=True)
+    elif language == 'move':
+        result = subprocess.run(['cloc', './files', '--json', '--read-lang-def=./lang_files/move_lang_def.txt', '--by-file'], capture_output=True, text=True)
     else:
         result = subprocess.run(['cloc', './files', '--json', '--include-lang=Go', '--by-file'], capture_output=True, text=True)
      
     cloc_output = json.loads(result.stdout)
     
-    solidity_files = {}
+    files = {}
     for file_path, file_info in cloc_output.items():
         if file_path != 'header' and file_path != 'SUM':
             
@@ -40,7 +46,7 @@ async def get_files_info(language):
             # Count import lines
             import_lines = await count_import_lines_solidity(file_content)
             
-            solidity_files[file_path] = {
+            files[file_path] = {
                 "file_name": file_path,
                 "code_lines": file_info.get('code', 0) - int(import_lines),
                 "comment_lines": file_info.get('comment', 0),
@@ -48,16 +54,16 @@ async def get_files_info(language):
                 "file_content": file_content
             }
 
-    return solidity_files
+    return files
 
 # Function to analyze all Solidity files
-async def analyze_solidity_contract():
+async def analyze_contract(LANGUAGE):
     solidity_files = await get_files_info(language=LANGUAGE)
     results = []
     program_counter = 0
     
     for file_path, file_info in solidity_files.items():
-        score, rationale, code_lines, code_to_comment_ratio = await get_complexity_score(file_path, file_info, chain=language)
+        score, rationale, code_lines, code_to_comment_ratio = await get_complexity_score(file_path, file_info, chain=LANGUAGE)
         program_counter += 1
         if score is not None:
             results.append({
@@ -105,8 +111,8 @@ async def main():
         os.makedirs(output_folder)
         print(f"Created output folder: {output_folder} 📁")
     
-    print("Analyzing Solidity files...🕵️‍♂️")
-    results, program_counter = await analyze_solidity_contract()
+    print("Analyzing files...🕵️‍♂️")
+    results, program_counter = await analyze_contract(LANGUAGE)
     
     await save_results(results, complexity_report_file)
     print(f"Analysis complete. Complexity report saved to {complexity_report_file} 💾✅")
@@ -128,7 +134,7 @@ async def main():
         md_file.write(schedule_result)
     print(f"Schedule has been written to {output_schedule_file}💾✅")
     
-    print(f"Estimated time for audit and formal verification: {adjusted_time_estimate} week(s) 🗓️✅")
+    print(f"Estimated time for audit: {adjusted_time_estimate} week(s) 🗓️✅")
 
 # Run the async main function
 if __name__ == "__main__":
