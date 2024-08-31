@@ -92,7 +92,7 @@ Number of files: {program_counter}
 Average Complexity Score: {avg_complexity:.2f}/10
 Median Complexity Score: {median_complexity:.2f}/10
 How complicated is it for the Prover? {str(prover_complexity)}/5 
-Estimated Time for Audit and Formal Verification: {time_estimate} week(s)
+Estimated Time for Audit: {time_estimate} week(s)
 """
     async with aiofiles.open(output_file, 'w') as f:
         await f.write(summary)

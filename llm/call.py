@@ -46,7 +46,8 @@ async def get_complexity_score(file_path, file_info, chain):
         elif chain == "go":
             prompt= await prepare_go_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
             system="You are an expert security researcher specializing in manual audits of Go-based projects intended to interact with the Ethereum ecosystem."
-
+        print(f'Conjuring {chain.upper()} bot 🤖')
+        
         response = await instructor_client.messages.create(
             temperature=0.0,
             model=claude_model_prod,
