@@ -11,7 +11,8 @@ from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calcu
 project = input("👋 Hello there!\nPlease type in the name of the project: ")
 PROJECT_NAME = project.strip().lower()
 ecosystem = input("👋 Ok!\nWhat ecosystem is the project based on, choose SOL, EVM or GO: ")
-language = str(ecosystem.strip().lower())
+LANGUAGE = str(ecosystem.strip().lower())
+print(f"Ok, let's analyze {PROJECT_NAME} written in {LANGUAGE}.")
 
 # Function to run CLOC on 'docs' directories and get Solidity file information
 async def get_files_info(language):
@@ -51,7 +52,7 @@ async def get_files_info(language):
 
 # Function to analyze all Solidity files
 async def analyze_solidity_contract():
-    solidity_files = await get_files_info(language=language)
+    solidity_files = await get_files_info(language=LANGUAGE)
     results = []
     program_counter = 0
     
