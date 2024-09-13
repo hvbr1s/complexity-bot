@@ -11,7 +11,7 @@
    - ⚠️ **Important:** Only include relevant and in-scope `.sol`, `.rs`, `.move` or `.go` files. Test files and out of scope contracts should NOT be included.
 6. **Start the bot:**
    - Run `make app` to start the analysis.
-7. **Enter the project name and language when prompted:** 
+7. **Enter the project name, language and chosen LLM model for analysis when prompted (we currently recommend CLAUDE):** 
    - Ensure you only type one word each time.
 8. **Generated reports will be placed in `./reports` directory:**
    - A summary including the estimated number of weeks and the overall complexity of the project.
