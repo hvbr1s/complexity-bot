@@ -9,6 +9,14 @@ from calculate.import_lines import count_import_lines_solidity
 from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
 
 PROJECT_NAME = input("👋 Welcome! Please enter the project name: ").strip().lower()
+
+while True:
+    LLM_ENGINE = input("🤖 Should we analyze it using Claude or GPT? (CLAUDE/GPT): ").strip().lower()
+    if LLM_ENGINE in ["claude", "gpt"]:
+        break
+    else:
+        print("❌ Invalid input. Please choose CLAUDE or GPT.")
+
 while True:
     ecosystem = input("🌐 Great! Which ecosystem is the project based on? (SOL/EVM/MOVE/GO): ").strip().lower()
     if ecosystem in ["sol", "evm", "move", "go"]:
@@ -16,9 +24,11 @@ while True:
         break
     else:
         print("❌ Invalid input. Please choose SOL, EVM, MOVE, or GO.")
-print(f"🚀 Excellent! Let's analyze {PROJECT_NAME.capitalize()} built on the {LANGUAGE.upper()} ecosystem.")
 
-# Function to run CLOC on 'docs' directories and get Solidity file information
+print(f"🚀 Excellent! Let's use {LLM_ENGINE.capitalize()} to analyze {PROJECT_NAME.capitalize()} built on the {LANGUAGE.upper()} ecosystem.")
+
+
+# Function to run CLOC on 'docs' directories and get file information
 async def get_files_info(language):
     if language == 'evm':
         result = subprocess.run(['cloc', './files', '--json', '--include-lang=Solidity', '--by-file'], capture_output=True, text=True)
@@ -56,14 +66,14 @@ async def get_files_info(language):
 
     return files
 
-# Function to analyze all Solidity files
+# Function to analyze all project files
 async def analyze_contract(LANGUAGE):
-    solidity_files = await get_files_info(language=LANGUAGE)
+    files = await get_files_info(language=LANGUAGE)
     results = []
     program_counter = 0
     
-    for file_path, file_info in solidity_files.items():
-        score, rationale, code_lines, code_to_comment_ratio = await get_complexity_score(file_path, file_info, chain=LANGUAGE)
+    for file_path, file_info in files.items():
+        score, rationale, code_lines, code_to_comment_ratio = await get_complexity_score(file_path, file_info, chain=LANGUAGE, bot=LLM_ENGINE)
         program_counter += 1
         if score is not None:
             results.append({

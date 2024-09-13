@@ -8,12 +8,11 @@
 4. **Install dependencies:**
    - Run `pip install -r requirements.txt`.
 5. **Copy directories and files for analysis** into the `/docs` folder.
-   - ⚠️ **Important:** Only include relevant and in-scope `.sol` or `.rs` files. Test files and out of scope contracts should NOT be included.
-6. **Start the analysis bot:**
-   - For a Solana project, run `make sol`.
-   - For a Solidity project, run `make evm`.
-   - For a Move project, run `make move`.
-7. **Enter the project name when prompted:** Ensure you only type one word.
+   - ⚠️ **Important:** Only include relevant and in-scope `.sol`, `.rs`, `.move` or `.go` files. Test files and out of scope contracts should NOT be included.
+6. **Start the bot:**
+   - Run `make app` to start the analysis.
+7. **Enter the project name and language when prompted:** 
+   - Ensure you only type one word each time.
 8. **Generated reports will be placed in `./reports` directory:**
    - A summary including the estimated number of weeks and the overall complexity of the project.
    - A complexity report with a file-by-file analysis, providing complexity scores and metrics for each file.

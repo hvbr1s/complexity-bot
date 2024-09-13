@@ -4,6 +4,7 @@ import json
 import instructor
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from openai import AsyncOpenAI
 from anthropic import AsyncAnthropic
 from system.prompt_sol import prepare_sol_prompt, prepare_sol_prompt_manual_only
 from system.prompt_evm import prepare_evm_prompt
@@ -18,15 +19,18 @@ class Complexity(BaseModel):
     complexity: str
     rationale: str
 
-# Set up OpenAI
+# Set up clients
 claude_client = AsyncAnthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
 claude_model_prod = "claude-3-5-sonnet-20240620"
+openai_client = AsyncOpenAI(api_key=os.environ['OPENAI_API_KEY'])
+openai_model_prod = "gpt-4o"
 
 # Set up Instructor wrapper:
-instructor_client = instructor.from_anthropic(AsyncAnthropic(), mode=instructor.Mode.ANTHROPIC_JSON)
+instructor_client_anthropic = instructor.from_anthropic(AsyncAnthropic(), mode=instructor.Mode.ANTHROPIC_JSON)
+instructor_client_openai =  instructor.from_openai(AsyncOpenAI(), mode=instructor.Mode.JSON)
 
 # Function to run the bot on a file and get the complexity score
-async def get_complexity_score(file_path, file_info, chain):
+async def get_complexity_score(file_path, file_info, chain, bot):
     try:
         code = file_info['file_content']
         code_lines = str(file_info['code_lines'])
@@ -48,20 +52,35 @@ async def get_complexity_score(file_path, file_info, chain):
             system="You are an expert security researcher specializing in manual audits of Go-based projects intended to interact with the Ethereum ecosystem."
         print(f'Conjuring {chain.upper()} bot 🤖')
         
-        response = await instructor_client.messages.create(
-            temperature=0.0,
-            model=claude_model_prod,
-            system=system,
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=1024,
-            response_model=Complexity    
-        )
-        
-        score = response.complexity
-        rationale = response.rationale
-        
+        if bot == "claude":
+            print(f'Waking {bot.upper()} bot 🦾')
+            response = await instructor_client_anthropic.messages.create(
+                temperature=0.0,
+                model=claude_model_prod,
+                system=system,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=1024,
+                response_model=Complexity    
+            )
+            score = response.complexity
+            rationale = response.rationale
+        elif bot == "gpt":
+            print(f'Waking {bot.upper()} bot 🦾')
+            response = await instructor_client_openai.chat.completions.create(
+                temperature=0.0,
+                model=openai_model_prod,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": prompt}
+                ],
+                timeout=60,
+                response_model=Complexity  
+            )
+            score = response.complexity
+            rationale = response.rationale
+
         if score is not None and rationale is not None:
             print(f'Program {file_path} got assigned a complexity score of {score}. {rationale}')
             return score, rationale, code_lines, code_to_comment_ratio
