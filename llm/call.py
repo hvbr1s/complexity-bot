@@ -23,7 +23,7 @@ class Complexity(BaseModel):
 claude_client = AsyncAnthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
 claude_model_prod = "claude-3-5-sonnet-20240620"
 openai_client = AsyncOpenAI(api_key=os.environ['OPENAI_API_KEY'])
-openai_model_prod = "gpt-4o"
+openai_model_prod = "o1-mini"
 
 # Set up Instructor wrapper:
 instructor_client_anthropic = instructor.from_anthropic(AsyncAnthropic(), mode=instructor.Mode.ANTHROPIC_JSON)
