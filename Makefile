@@ -9,7 +9,7 @@ lookup:
 scrape:
 	python3 pinecone_pipeline/update_scripts/scraper.py
 
-parser:
+parse:
 	python3 pinecone_pipeline/update_scripts/parser.py
 
 chunk:
