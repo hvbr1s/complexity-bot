@@ -72,7 +72,7 @@ async def get_complexity_score(file_path, file_info, chain, bot):
                 temperature=0.0,
                 model=openai_model_prod,
                 messages=[
-                    {"role": "system", "content": system},
+                    #{"role": "system", "content": system},
                     {"role": "user", "content": prompt}
                 ],
                 timeout=60,

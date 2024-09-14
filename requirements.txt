@@ -19,7 +19,7 @@ jiter==0.5.0
 jsonpatch==1.33
 jsonpointer==3.0.0
 orjson==3.10.6
-openai
+openai==1.45.0
 packaging==24.1
 pydantic==2.8.2
 pydantic_core==2.20.1
@@ -33,3 +33,9 @@ tokenizers==0.19.1
 tqdm==4.66.4
 typing_extensions==4.12.2
 urllib3==2.2.2
+cohere==4.1.0
+langchain_experimental
+bs4
+markdown2
+tiktoken
+pinecone
