@@ -27,7 +27,7 @@ openai_model_prod = "o1-mini"
 
 # Set up Instructor wrapper:
 instructor_client_anthropic = instructor.from_anthropic(AsyncAnthropic(), mode=instructor.Mode.ANTHROPIC_JSON)
-instructor_client_openai =  instructor.from_openai(AsyncOpenAI(), mode=instructor.Mode.JSON)
+instructor_client_openai =  instructor.from_openai(AsyncOpenAI(), mode=instructor.Mode.JSON_O1)
 
 # Function to run the bot on a file and get the complexity score
 async def get_complexity_score(file_path, file_info, chain, bot):
