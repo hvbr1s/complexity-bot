@@ -8,7 +8,7 @@
 4. **Install dependencies:**
    - Run `pip install -r requirements.txt`.
 5. **Copy directories and files for analysis** into the `/docs` folder.
-   - ⚠️ **Important:** Only include relevant and in-scope `.sol`, `.rs`, `.move` or `.go` files. Test files and out of scope contracts should NOT be included.
+   - ⚠️ **Important:** Only include relevant and in-scope `.sol`, `.rs`, `.move`, `.ts` or `.go` files. Test files and out of scope contracts should NOT be included.
 6. **Start the bot:**
    - Run `make app` to start the analysis.
 7. **Enter the project name, language and chosen LLM model for analysis when prompted (we currently recommend CLAUDE):** 
