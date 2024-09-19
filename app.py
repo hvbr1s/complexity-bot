@@ -18,13 +18,13 @@ while True:
         print("❌ Invalid input. Please choose CLAUDE or GPT.")
 
 while True:
-    ecosystem = input("🌐 Great! Which ecosystem is the project based on? (SOL/EVM/MOVE/GO): ").strip().lower()
-    if ecosystem in ["sol", "evm", "move", "go"]:
+    ecosystem = input("🌐 Great! Which ecosystem is the project based on? (SOL/EVM/MOVE/GO/TS): ").strip().lower()
+    if ecosystem in ["sol", "evm", "move", "go", "ts"]:
         LANGUAGE = ecosystem
         break
     else:
-        print("❌ Invalid input. Please choose SOL, EVM, MOVE, or GO.")
-
+        print("❌ Invalid input. Please choose SOL, EVM, MOVE, TS or GO.")
+        
 print(f"🚀 Excellent! Let's use {LLM_ENGINE.capitalize()} to analyze {PROJECT_NAME.capitalize()} built on the {LANGUAGE.upper()} ecosystem.")
 
 
@@ -36,6 +36,8 @@ async def get_files_info(language):
         result = subprocess.run(['cloc', './files', '--json', '--include-lang=Rust', '--by-file'], capture_output=True, text=True)
     elif language == 'move':
         result = subprocess.run(['cloc', './files', '--json', '--read-lang-def=./lang_files/move_lang_def.txt', '--by-file'], capture_output=True, text=True)
+    elif language == 'ts':
+        result = subprocess.run(['cloc', './files', '--json', '--include-lang=TypeScript', '--by-file'], capture_output=True, text=True)
     else:
         result = subprocess.run(['cloc', './files', '--json', '--include-lang=Go', '--by-file'], capture_output=True, text=True)
      
@@ -131,7 +133,7 @@ async def main():
     total_cloc, avg_complexity, median_complexity = await calculate_summary_statistics(results)
     
     # Calculate adjusted time estimate
-    adjusted_time_estimate = await calculate_adjusted_time_estimate_base(total_cloc, avg_complexity)
+    adjusted_time_estimate = await calculate_adjusted_time_estimate_base(total_cloc, avg_complexity, LANGUAGE)
 
     await save_summary(total_cloc, avg_complexity, median_complexity, adjusted_time_estimate, summary_file, program_counter)
     print(f"Project summary saved to {summary_file} 💾✅")

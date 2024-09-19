@@ -17,4 +17,3 @@ chunk:
 
 update:
 	python3 pinecone_pipeline/update_scripts/semantic_updater.py
-	

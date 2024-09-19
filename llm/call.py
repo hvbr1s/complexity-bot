@@ -11,6 +11,7 @@ from system.prompt_evm import prepare_evm_prompt
 from system.prompt_move import prepare_move_prompt
 from system.prompt_go import prepare_go_prompt
 from system.prompt_scheduler import prepare_scheduler_prompt
+from system.prompt_ts import prepare_ts_prompt
 
 # Load secrets
 load_dotenv()
@@ -50,6 +51,9 @@ async def get_complexity_score(file_path, file_info, chain, bot):
         elif chain == "go":
             prompt= await prepare_go_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
             system="You are an expert security researcher specializing in manual audits of Go-based projects intended to interact with the Ethereum ecosystem."
+        elif chain == "ts":
+            prompt= await prepare_ts_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            system="You are an expert security researcher specializing in manual audits of TypeScript-based projects."
         print(f'Conjuring {chain.upper()} bot 🤖')
         
         if bot == "claude":

@@ -1,6 +1,6 @@
 import math
 
-async def calculate_adjusted_time_estimate_base(total_loc, avg_complexity):
+async def calculate_adjusted_time_estimate_base(total_loc, avg_complexity, language):
     """
     Calculate the adjusted time estimate based on lines of code (LOC) and average complexity.
 
@@ -15,7 +15,10 @@ async def calculate_adjusted_time_estimate_base(total_loc, avg_complexity):
     """
     
     # Step 1: Calculate the base estimate (in weeks)
-    base_estimate_weeks = total_loc / 1000
+    if language == 'ts':
+        base_estimate_weeks = total_loc / 2000
+    else:
+        base_estimate_weeks = total_loc / 1000
     print(f'Base estimate weeks: {base_estimate_weeks}')
     
     # Step 2: Determine the complexity multiplier
