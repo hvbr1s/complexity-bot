@@ -62,6 +62,7 @@ Your response must be a JSON file with the following structure:
 
 <output>
 {{
+  "purpose": "[INSERT BRIEF DESCRIPTION OF THE PROGRAM'S PURPOSE HERE]",
   "complexity": "[INSERT SCORE HERE]",
   "rationale": "[INSERT ONE-SENTENCE EXPLANATION HERE]"
 }}

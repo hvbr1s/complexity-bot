@@ -75,11 +75,12 @@ async def analyze_contract(LANGUAGE):
     program_counter = 0
     
     for file_path, file_info in files.items():
-        score, rationale, code_lines, code_to_comment_ratio = await get_complexity_score(file_path, file_info, chain=LANGUAGE, bot=LLM_ENGINE)
+        score, rationale, code_lines, code_to_comment_ratio, purpose = await get_complexity_score(file_path, file_info, chain=LANGUAGE, bot=LLM_ENGINE, protocol=PROJECT_NAME.capitalize())
         program_counter += 1
         if score is not None:
             results.append({
                 'file': file_path,
+                'purpose': purpose,
                 'score': score,
                 'rationale': rationale,
                 'cloc': code_lines,

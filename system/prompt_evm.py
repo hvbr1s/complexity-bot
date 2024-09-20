@@ -1,4 +1,4 @@
-async def prepare_evm_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, solidity_contract):
+async def prepare_evm_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, solidity_contract, protocol):
    try:
       EVM_ANALYZER = f''' 
 Your task is to analyze a Solidity (.sol) file intended for deployment on the Ethereum blockchain and provide a complexity score to guide manual security audits and formal verification processes.
@@ -13,6 +13,7 @@ Analyze the provided Solidity contract carefully, think step-by-step:
 
 <thinking>
 1. Code metadata:
+   - Project name: {protocol}
    - File name: {file_path}
    - Number of lines of code: {code_lines}
    - Number of lines of comments: {comment_lines}
@@ -77,6 +78,7 @@ Analyze the provided Solidity contract carefully, think step-by-step:
 
 Your response must be a JSON file with the following structure:
 {{
+  "purpose": "[INSERT BRIEF DESCRIPTION OF THE PROGRAM'S PURPOSE HERE]",
   "complexity": "[SCORE]",
   "rationale": "[ONE SENTENCE EXPLANATION]"
 }}
