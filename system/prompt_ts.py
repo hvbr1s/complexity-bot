@@ -1,4 +1,4 @@
-async def prepare_ts_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, code):
+async def prepare_ts_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, code, protocol):
    try:
       TYPESCRIPT_ANALYZER = f'''     
 Your task is to analyze TypeScript files which are part of a project intended for interacting with the Ethereum blockchain and provide a complexity score to guide manual security audits.
@@ -9,6 +9,7 @@ Here is the TypeScript code to analyze:
 </ts_code>
 
 Here is the metadata for the code:
+- Project name: {protocol}
 - File name: {file_path}
 - Number of lines of code: {code_lines}
 - Number of lines of comments: {comment_lines}
@@ -68,6 +69,7 @@ Your response must be a JSON file with the following structure:
 
 <output>
 {{
+  "purpose": "[INSERT BRIEF DESCRIPTION OF THE PROGRAM'S PURPOSE HERE]",
   "complexity": "[INSERT SCORE HERE]",
   "rationale": "[INSERT ONE-SENTENCE EXPLANATION HERE]"
 }}

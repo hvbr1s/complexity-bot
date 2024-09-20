@@ -19,6 +19,7 @@ load_dotenv()
 class Complexity(BaseModel):
     complexity: str
     rationale: str
+    purpose: str | None
 
 # Set up clients
 claude_client = AsyncAnthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
@@ -70,6 +71,8 @@ async def get_complexity_score(file_path, file_info, chain, bot):
             )
             score = response.complexity
             rationale = response.rationale
+            purpose = response.purpose
+            
         elif bot == "gpt":
             print(f'{bot.upper()} will take a look at this 🦾')
             response = await instructor_client_openai.chat.completions.create(
@@ -84,10 +87,11 @@ async def get_complexity_score(file_path, file_info, chain, bot):
             )
             score = response.complexity
             rationale = response.rationale
-
+            purpose = response.purpose
+            
         if score is not None and rationale is not None:
             print(f'Program {file_path} got assigned a complexity score of {score}. {rationale}')
-            return score, rationale, code_lines, code_to_comment_ratio
+            return score, rationale, code_lines, code_to_comment_ratio, purpose
         else:
             print(f"Couldn't generate complexity info for {file_path}: Missing 'complexity' or 'rationale' in API response")
             return None
