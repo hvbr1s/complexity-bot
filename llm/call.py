@@ -57,7 +57,7 @@ async def get_complexity_score(file_path, file_info, chain, bot):
         print(f'Conjuring {chain.upper()} bot 🤖')
         
         if bot == "claude":
-            print(f'Waking {bot.upper()} bot 🦾')
+            print(f'{bot.upper()} will take a look at this 🦾')
             response = await instructor_client_anthropic.messages.create(
                 temperature=0.0,
                 model=claude_model_prod,
@@ -71,7 +71,7 @@ async def get_complexity_score(file_path, file_info, chain, bot):
             score = response.complexity
             rationale = response.rationale
         elif bot == "gpt":
-            print(f'Waking {bot.upper()} bot 🦾')
+            print(f'{bot.upper()} will take a look at this 🦾')
             response = await instructor_client_openai.chat.completions.create(
                 temperature=0.0,
                 model=openai_model_prod,
