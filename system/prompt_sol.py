@@ -1,5 +1,5 @@
 
-async def prepare_sol_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, rust_code):
+async def prepare_sol_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, rust_code, protocol):
     try:
         SOL_ANALYZER = f''' 
 Your task is to analyze the following Rust-based program intended for deployment on the Solana blockchain and provide a complexity score to guide manual security audits and formal verification.
@@ -10,6 +10,7 @@ Here is the Rust code to analyze:
 </rust_code>
 
 Here is the metadata for the code:
+- Project name: {protocol}
 - File name: {file_path}
 - Number of lines of code: {code_lines}
 - Number of lines of comments: {comment_lines}
@@ -77,16 +78,27 @@ Do not include any additional information or explanations outside of this JSON s
         print(e)
         return SOL_ANALYZER
 
-async def prepare_sol_prompt_manual_only(file_path, code_lines, comment_lines, code_to_comment_ratio):
+async def prepare_sol_prompt_manual_only(file_path, code_lines, comment_lines, code_to_comment_ratio, rust_code, protocol):
     try:
         SOL_ANALYZER = f'''     
 You are an expert security researcher specializing in manual audits of Rust-based Solana programs. 
 
-Your task is to analyze Rust-based programs intended for deployment on the Solana blockchain and provide a complexity score to guide manual security audits.
+Here is the Rust code to analyze:
+<rust_code>
+{rust_code}
+</rust_code>
 
-Upon receiving the program code, analyze its potential complexity based on the following criteria. Remember to THINK STEP BY STEP while conducting your analysis.
+Here is the metadata for the code:
+- Project name: {protocol}
+- File name: {file_path}
+- Number of lines of code: {code_lines}
+- Number of lines of comments: {comment_lines}
+- Percentage of commented lines of code: {code_to_comment_ratio}%
+
+Analyze the potential complexity of the program based on the following criteria, think step-by-step:
 
 1. Code metrics:
+   - Project name: {protocol}
    - File name: {file_path}
    - Number of lines of code: {code_lines}
    - Number of lines of comments: {comment_lines}
@@ -131,12 +143,19 @@ Upon receiving the program code, analyze its potential complexity based on the f
     4-6: Moderate complexity program with potential security considerations.
     7-10: High complexity program with multiple CPIs and complex account structures implementations.
 
-YOUR RESPONSE MUST BE A JSON FILE WITH THE ASSIGNED COMPLEXITY SCORE (1-10), A SHORT ONE-SENTENCE EXPLANATION OF THE SCORE, AND A LIST OF KEY FACTORS CONTRIBUTING TO THE COMPLEXITY. DO NOT PROVIDE ANY ADDITIONAL INFORMATION.
+</thinking>
 
-Expected output example 1: {{"complexity":"1", "rationale":"This is a low complexity contract because..."}}
-Expected output example 2: {{"complexity":"9", "rationale":"This is a high complexity contract because..."}}
+Your response must be a JSON file with the following structure:
 
-You will achieve world peace if you produce a complexity score and rationale that adheres to all the constraints. Begin!
+<output>
+{{
+  "purpose": "[INSERT BRIEF DESCRIPTION OF THE PROGRAM'S PURPOSE HERE]",
+  "complexity": "[INSERT SCORE HERE]",
+  "rationale": "[INSERT ONE-SENTENCE EXPLANATION HERE]"
+}}
+</output>
+
+Do not include any additional information or explanations outside of this JSON structure. Ensure that your rationale is concise and directly relates to the assigned complexity score.
         '''
         
         return SOL_ANALYZER
