@@ -83,7 +83,7 @@ async def analyze_contract(LANGUAGE):
                 'purpose': purpose,
                 'score': score,
                 'rationale': rationale,
-                'cloc': code_lines,
+                'ncloc': code_lines,
                 'code to comment ratio': str(code_to_comment_ratio)
             })
             
@@ -100,7 +100,7 @@ async def save_results(results, output_file):
 async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter):
     prover_complexity = int(avg_complexity)/2 
     summary = f"""Summary for {PROJECT_NAME.capitalize()}:
-Total CLOC: {total_cloc}
+Total nCLOC: {total_cloc}
 Number of files: {program_counter}
 Average Complexity Score: {avg_complexity:.2f}/10
 Median Complexity Score: {median_complexity:.2f}/10

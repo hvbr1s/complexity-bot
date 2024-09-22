@@ -162,4 +162,9 @@ Do not include any additional information or explanations outside of this JSON s
      
     except Exception as e:
         print(e)
-        return SOL_ANALYZER
+        error  = {
+            "purpose": "Oops, something went wrong, I wasn't able to score that file!",
+            "complexity": "0",
+            "rationale": "Oops, something went wrong, I wasn't able to score that file!"
+         }
+        return error
