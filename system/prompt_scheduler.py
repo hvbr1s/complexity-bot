@@ -56,4 +56,7 @@ Remember to think step-by-step and consider all the provided information when cr
      
     except Exception as e:
         print(e)
-        return SCHEDULER
+        error =  {
+           "error": "Something went wrong, I wasn't able to schedule the audit, please try again"
+        }
+        return error

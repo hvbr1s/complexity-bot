@@ -76,7 +76,12 @@ Do not include any additional information or explanations outside of this JSON s
      
     except Exception as e:
         print(e)
-        return SOL_ANALYZER
+        error  = {
+            "purpose": "Oops, something went wrong, I wasn't able to score that file!",
+            "complexity": "0",
+            "rationale": "Oops, something went wrong, I wasn't able to score that file!"
+         }
+        return error
 
 async def prepare_sol_prompt_manual_only(file_path, code_lines, comment_lines, code_to_comment_ratio, rust_code, protocol):
     try:
@@ -95,26 +100,18 @@ Here is the metadata for the code:
 - Number of lines of comments: {comment_lines}
 - Percentage of commented lines of code: {code_to_comment_ratio}%
 
-Analyze the potential complexity of the program based on the following criteria, think step-by-step:
+Analyze the potential complexity of the program based on the following criteria, make sure to think step-by-step:
 
-1. Code metrics:
-   - Project name: {protocol}
-   - File name: {file_path}
-   - Number of lines of code: {code_lines}
-   - Number of lines of comments: {comment_lines}
-   - Percentage of commented lines of code: {code_to_comment_ratio}%
+<thinking>
 
-2. Analyze the potential complexity of the  program based on the following:
-   - Number of lines of code.
-   - Actual code content and structure
-   - Program size categorization:
+1. Categorize the program size as:
      * < 100 lines: Very small
      * 100-300 lines: Small
      * 300-500 lines: Medium
      * 500-1000 lines: Large
-     * > 1000 lines: Very large   
+     * > 1000 lines: Very large 
 
-3. Assess the following Solana-specific complexity factors:
+2. Assess the following Solana-specific complexity factors:
    - Frequency and complexity of Cross-Program Invocations (CPI) (look for the 'invoke' or 'invoke_signed' functions)
    - Use of Program Derived Addresses (PDAs)
    - Implementation of complex account validation logic
@@ -122,27 +119,26 @@ Analyze the potential complexity of the program based on the following criteria,
    - Reliance on custom libraries over established ones (example: SPL library)
    - Implementation of complex data structures like Merkle trees, hash tables or binary trees.
    
-4. Consider security-focused elements:
+3. Consider security-focused elements:
    - Proper handling of account ownership and type checks
    - Correct implementation of rent exemption checks
    - Number of entry points (example: 'pub fn')
 
-5. Analyze external dependencies:
+4. Analyze external dependencies:
    - Number and nature of external crates used
    - Use of the Anchor framework which makes the code easier to read and reason about (example: 'use anchor_lang').
    - Use of Borsh that simplifies serializing and deserializing data structures (example: 'use bytemuck').
    - Use of Bytemuck that simplifies low-level data manipulation (example: 'use borsh')
 
-6. Identify critical functions:
+5. Identify critical functions:
    - Locate and briefly note the most complex or security-critical functions
 
-7. Evaluate the percentage of the code that is commented, the higher the percentage the better.
+6. Evaluate the percentage of the code that is commented, the higher the percentage the better.
 
-8. Finally, assign a complexity score from 1 to 10, where:
+7. Finally, assign a complexity score from 1 to 10, where:
     1-3: Simple Solana program with straightforward and easily verified logic.
     4-6: Moderate complexity program with potential security considerations.
     7-10: High complexity program with multiple CPIs and complex account structures implementations.
-
 </thinking>
 
 Your response must be a JSON file with the following structure:

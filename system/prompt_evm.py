@@ -9,7 +9,7 @@ Here is the Ethereum smart contract to analyze:
 {solidity_contract}
 </solidity_contract>
 
-Analyze the provided Solidity contract carefully, think step-by-step:
+Analyze the provided Solidity contract carefully, make sure to think step-by-step:
 
 <thinking>
 1. Code metadata:

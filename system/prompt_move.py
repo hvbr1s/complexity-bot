@@ -15,7 +15,7 @@ Here is the metadata for the code:
 - Number of lines of comments: {comment_lines}
 - Percentage of commented lines of code: {code_to_comment_ratio}%
 
-Analyze the potential complexity of the program based on the following criteria, think step-by-step:
+Analyze the provided file carefully, make sure to think step-by-step:
 
 <thinking>
 

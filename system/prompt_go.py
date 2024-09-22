@@ -9,7 +9,7 @@ Here is the Go code to analyze:
 {go_file}
 </go_code>
 
-Analyze the provided Go code carefully, think step-by-step:
+Analyze the provided file carefully, make sure to think step-by-step:
 
 <thinking>
 1. Note the following metadata:
