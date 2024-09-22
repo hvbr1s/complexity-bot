@@ -1,35 +1,32 @@
 async def prepare_evm_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, solidity_contract, protocol):
    try:
       EVM_ANALYZER = f''' 
-Your task is to analyze a Solidity (.sol) file intended for deployment on the Ethereum blockchain and provide a complexity score to guide manual security audits and formal verification processes.
+Your task is to analyze a Solidity (.sol) file intended for deployment of a smart contract on the Ethereum blockchain and provide a complexity score to guide manual security audits and formal verification processes.
 
-Here is the Ethereum smart contract to analyze:
+Here is the Solidity file to analyze:
 
-<solidity_contract>
+<solidity_file>
 {solidity_contract}
-</solidity_contract>
+</solidity_file>
 
-Analyze the provided Solidity contract carefully, make sure to think step-by-step:
+Here is the metadata for the file:
+- Project name: {protocol}
+- File name: {file_path}
+- Number of lines of code: {code_lines}
+- Number of lines of comments: {comment_lines}
+- Percentage of commented lines of code: {code_to_comment_ratio}%
+
+Analyze the potential complexity of the code based on the following criteria, think step-by-step:
 
 <thinking>
-1. Code metadata:
-   - Project name: {protocol}
-   - File name: {file_path}
-   - Number of lines of code: {code_lines}
-   - Number of lines of comments: {comment_lines}
-   - Percentage of commented lines of code: {code_to_comment_ratio}%
-
-2. Analyze the potential complexity of the Ethereum smart contract based on:
-   - Number of lines of code
-   - Actual code content and structure
-   - Contract size categorization:
+1. Categorize the program size as:
      * < 100 lines: Very small
      * 100-300 lines: Small
      * 300-500 lines: Medium
      * 500-1000 lines: Large
      * > 1000 lines: Very large
 
-3. IMPORTANTLY, evaluate the contract's potential challenges for formal verification, considering:
+2. Evaluate the program's potential challenges for formal verification:
   - Higher complexity when formally verifying non-linear arithmetic due to SMT limitations
   - Implementation of non-linear mathematical operations
   - Number and length of copy-loops produced by the solidity compiler due to complex data structures
@@ -52,7 +49,7 @@ Analyze the provided Solidity contract carefully, make sure to think step-by-ste
         // Perform delegate call to Contract A’s setData function
         (bool success, ) = contractAAddress.delegatecall(abi.encodeWithSignature(“setData(uint256)“, _data));
         require(success, “Delegate call failed”);
-    }}`
+    }}```
    - Using ‘this’ for external calls within the same contract (example: `address(this)`)
 
 6. Consider security-focused elements:
@@ -62,7 +59,7 @@ Analyze the provided Solidity contract carefully, make sure to think step-by-ste
 
 7. Analyze external dependencies:
    - Number and nature of imported contracts or libraries
-   - Use of established libraries (e.g., OpenZeppelin) vs custom implementations
+   - Use of established libraries (e.g., OpenZeppelin) vs custom implementations which are more challenging to audit
    - Contract constructor dependencies and general inheritance structure, the more inherited the more complex
 
 8. Identify critical functions:

@@ -2,7 +2,7 @@
 async def prepare_sol_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, rust_code, protocol):
     try:
         SOL_ANALYZER = f''' 
-Your task is to analyze the following Rust-based program intended for deployment on the Solana blockchain and provide a complexity score to guide manual security audits and formal verification.
+Your task is to analyze the following Rust-based file which is part of a larger program intended for deployment on the Solana blockchain and provide a complexity score to guide manual security audits and formal verification.
     
 Here is the Rust code to analyze:
 <rust_code>
@@ -30,10 +30,9 @@ Analyze the potential complexity of the program based on the following criteria,
    - Look for presence of floating-point operations (f32 or f64) vs. scaled integers, the presence of floating points make formal verification extremely difficult.
    - Check for implementation of non-linear mathematical operations (e.g., 'checked_mul', 'checked_div')
    - Identify implementation of complex data structures like Merkle trees, hash tables or binary trees
-   - Consider the number of calls to other programs, the more calls the more complex the program:
+   - Frequency and complexity of Cross-Program Invocations (CPI) (look for 'invoke' or 'invoke_signed' functions)
 
 3. Assess Solana-specific complexity factors:
-   - Frequency and complexity of Cross-Program Invocations (CPI) (look for 'invoke' or 'invoke_signed' functions)
    - Use of Program Derived Addresses (PDAs)
    - Implementation of complex account validation logic
    - Handling of multiple signers or complex signer validation
