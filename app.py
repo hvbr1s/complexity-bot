@@ -1,11 +1,13 @@
 import os
 import json
 import asyncio
-import aiofiles
 from llm.call import schedule
 from llm.analyze import analyze_contract
+from utils.save import save_results, save_summary
 from calculate.summary import calculate_summary_statistics
 from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
+
+# User input
 
 PROJECT_NAME = input("👋 Welcome! Please enter the project name: ").strip().lower()
 
@@ -26,27 +28,7 @@ while True:
         
 print(f"🚀 Excellent! Let's use {LLM_ENGINE.capitalize()} to analyze {PROJECT_NAME.capitalize()} built on the {LANGUAGE.upper()} ecosystem.")
 
-
-# Function to save results to a json file
-async def save_results(results, output_file):
-    async with aiofiles.open(output_file, 'w') as f:
-        json_data = {"complexity_report": results}
-        await f.write(json.dumps(json_data, indent=2))
-        
-# Function to save summary to a txt file
-async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter, PROJECT_NAME):
-    prover_complexity = int(avg_complexity)/2 
-    summary = f"""Summary for {PROJECT_NAME.capitalize()}:
-Total nCLOC: {total_cloc}
-Number of files: {program_counter}
-Average Complexity Score: {avg_complexity:.2f}/10
-Median Complexity Score: {median_complexity:.2f}/10
-How complicated is it for the Prover? {str(prover_complexity)}/5 
-Estimated Time for Audit: {time_estimate} week(s)
-"""
-    async with aiofiles.open(output_file, 'w') as f:
-        await f.write(summary)
-        
+   
 ## Main function
 async def main():
     
