@@ -114,10 +114,10 @@ async def get_complexity_score_fv(file_path, file_info, chain, bot, protocol):
         # Prepare system prompt based on chain
         if chain == "sol":
             prompt = await prepare_sol_prompt_fv(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
-            system= "You are an expert security researcher specializing in formal verification of Rust-based Solana programs."
+            system= "You are an expert security engineer specializing in formal verification of Rust-based Solana programs."
         elif chain == "evm":
             prompt= await prepare_evm_prompt_fv(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
-            system="You are an expert security researcher specializing in formal verification of Solidity-based Ethereum smart contracts."
+            system="You are an expert security engineer specializing in formal verification of Solidity-based Ethereum smart contracts."
         print(f'Conjuring {chain.upper()} bot 🤖')
         
         if bot == "claude":
@@ -132,9 +132,8 @@ async def get_complexity_score_fv(file_path, file_info, chain, bot, protocol):
                 max_tokens=1024,
                 response_model=Complexity    
             )
-            score = response.complexity
-            rationale = response.rationale
-            purpose = response.purpose
+            score_fv = response.complexity
+            rationale_fv = response.rationale
             
         elif bot == "gpt":
             print(f'{bot.upper()} will take a look at this 🦾')
@@ -148,13 +147,12 @@ async def get_complexity_score_fv(file_path, file_info, chain, bot, protocol):
                 timeout=60,
                 response_model=Complexity  
             )
-            score = response.complexity
-            rationale = response.rationale
-            purpose = response.purpose
+            score_fv = response.complexity
+            rationale_fv = response.rationale
             
-        if score is not None and rationale is not None:
-            print(f'Program {file_path} got assigned a complexity score of {score}. {rationale}')
-            return score, rationale, code_lines, code_to_comment_ratio, purpose
+        if score_fv is not None and rationale_fv is not None:
+            print(f'Program {file_path} got assigned a complexity score (FV) of {score_fv}. {rationale_fv}')
+            return score_fv, rationale_fv
         else:
             print(f"Couldn't generate complexity info for {file_path}: Missing 'complexity' or 'rationale' in API response")
             return None
