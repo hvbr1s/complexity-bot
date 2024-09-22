@@ -1,7 +1,7 @@
 async def prepare_evm_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, solidity_contract, protocol):
    try:
       EVM_ANALYZER = f''' 
-Your task is to analyze a Solidity (.sol) file intended for deployment of a smart contract on the Ethereum blockchain and provide a complexity score to guide manual security audits and formal verification processes.
+Your task is to analyze a Solidity (.sol) file intended for deployment of a smart contract on the Ethereum blockchain and provide a complexity score to guide manual security audits.
 
 Here is the Solidity file to analyze:
 
@@ -13,7 +13,6 @@ Here is the metadata for the file:
 - Project name: {protocol}
 - File name: {file_path}
 - Number of lines of code: {code_lines}
-- Number of lines of comments: {comment_lines}
 - Percentage of commented lines of code: {code_to_comment_ratio}%
 
 Analyze the potential complexity of the code based on the following criteria, think step-by-step:
@@ -26,10 +25,10 @@ Analyze the potential complexity of the code based on the following criteria, th
      * 500-1000 lines: Large
      * > 1000 lines: Very large
 
-2. Evaluate the program's potential challenges for formal verification:
-  - Higher complexity when formally verifying non-linear arithmetic due to SMT limitations
-  - Implementation of non-linear mathematical operations
-  - Number and length of copy-loops produced by the solidity compiler due to complex data structures
+2. Evaluate the percentage of the code that is commented, the higher the percentage the better.
+   
+3. Identify critical functions:
+   - Locate and briefly note the most complex or security-critical functions
 
 4. Assess the following Ethereum-specific complexity factors:
   - Use of delegate calls
@@ -52,7 +51,7 @@ Analyze the potential complexity of the code based on the following criteria, th
     }}```
    - Using ‘this’ for external calls within the same contract (example: `address(this)`)
 
-6. Consider security-focused elements:
+6. Consider the following security-focused elements:
    - Proper access control mechanisms
    - Correct implementation of the checks-effects-interactions pattern
    - Handling of ETH transfers and potential re-entrancy vulnerabilities
@@ -62,15 +61,10 @@ Analyze the potential complexity of the code based on the following criteria, th
    - Use of established libraries (e.g., OpenZeppelin) vs custom implementations which are more challenging to audit
    - Contract constructor dependencies and general inheritance structure, the more inherited the more complex
 
-8. Identify critical functions:
-   - Locate and briefly note the most complex or security-critical functions
-
-9. Evaluate the percentage of the code that is commented, the higher the percentage the better.
-
-10. Assign a complexity score from 1 to 10, where:
-    1-3: Simple contract with straightforward logic and easily formally verified code.
-    4-6: Moderate complexity contract with potential security considerations.
-    7-10: High complexity contract with delegate calls, assembly, complex state management, and non-linear mathematics that are difficult to formally verify.
+8. Assign a complexity score from 1 to 10, where:
+    1-3: Simple contract with straightforward logic and easily audited code.
+    4-6: Moderate complexity contract with potential security considerations and might require more time to manually review.
+    7-10: High complexity contract with delegate calls, assembly, complex state management and data structures that are difficult and time-consuming to manually review.
 </thinking>
 
 Your response must be a JSON file with the following structure:

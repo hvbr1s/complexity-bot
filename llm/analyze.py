@@ -1,7 +1,35 @@
 import subprocess
 import json
-from llm.call import get_complexity_score
+from llm.call import get_complexity_score_manual, get_complexity_score_fv
 from calculate.import_lines import count_import_lines_solidity
+
+
+# Function to analyze all project files
+async def analyze_contract(LANGUAGE, LLM_ENGINE, PROJECT_NAME):
+    files = await get_files_info(language=LANGUAGE)
+    results = []
+    program_counter = 0
+    
+    for file_path, file_info in files.items():
+        score, rationale, code_lines, code_to_comment_ratio, purpose = await get_complexity_score_manual(file_path, file_info, chain=LANGUAGE, bot=LLM_ENGINE, protocol=PROJECT_NAME.capitalize())
+        if LANGUAGE in ["sol", "evm"]:
+            score_fv, rationale_fv = await get_complexity_score_fv(file_path, file_info, chain=LANGUAGE, bot=LLM_ENGINE, protocol=PROJECT_NAME.capitalize())
+            
+        program_counter += 1
+        if score is not None:
+            results.append({
+                'file': file_path,
+                'purpose': purpose,
+                'score_manual': score,
+                'rationale': rationale,
+                'score_fv': score_fv,
+                'rationale_fv': rationale_fv,
+                'ncloc': code_lines,
+                'code to comment ratio': str(code_to_comment_ratio)
+            })
+            
+    print(f'Number of files in this repo: {program_counter}')  
+    return results, program_counter
 
 # Function to run CLOC on 'docs' directories and get file information
 async def get_files_info(language):
@@ -43,24 +71,3 @@ async def get_files_info(language):
 
     return files
 
-# Function to analyze all project files
-async def analyze_contract(LANGUAGE, LLM_ENGINE, PROJECT_NAME):
-    files = await get_files_info(language=LANGUAGE)
-    results = []
-    program_counter = 0
-    
-    for file_path, file_info in files.items():
-        score, rationale, code_lines, code_to_comment_ratio, purpose = await get_complexity_score(file_path, file_info, chain=LANGUAGE, bot=LLM_ENGINE, protocol=PROJECT_NAME.capitalize())
-        program_counter += 1
-        if score is not None:
-            results.append({
-                'file': file_path,
-                'purpose': purpose,
-                'score': score,
-                'rationale': rationale,
-                'ncloc': code_lines,
-                'code to comment ratio': str(code_to_comment_ratio)
-            })
-            
-    print(f'Number of files in this repo: {program_counter}')  
-    return results, program_counter
