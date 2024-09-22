@@ -2,10 +2,9 @@ import os
 import json
 import asyncio
 import aiofiles
-import subprocess
-from llm.call import get_complexity_score, schedule
+from llm.call import schedule
+from llm.analyze import analyze_contract
 from calculate.summary import calculate_summary_statistics
-from calculate.import_lines import count_import_lines_solidity
 from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
 
 PROJECT_NAME = input("👋 Welcome! Please enter the project name: ").strip().lower()
@@ -28,68 +27,6 @@ while True:
 print(f"🚀 Excellent! Let's use {LLM_ENGINE.capitalize()} to analyze {PROJECT_NAME.capitalize()} built on the {LANGUAGE.upper()} ecosystem.")
 
 
-# Function to run CLOC on 'docs' directories and get file information
-async def get_files_info(language):
-    if language == 'evm':
-        result = subprocess.run(['cloc', './files', '--json', '--include-lang=Solidity', '--by-file'], capture_output=True, text=True)
-    elif language == 'sol':
-        result = subprocess.run(['cloc', './files', '--json', '--include-lang=Rust', '--by-file'], capture_output=True, text=True)
-    elif language == 'move':
-        result = subprocess.run(['cloc', './files', '--json', '--read-lang-def=./lang_files/move_lang_def.txt', '--by-file'], capture_output=True, text=True)
-    elif language == 'ts':
-        result = subprocess.run(['cloc', './files', '--json', '--include-lang=TypeScript', '--by-file'], capture_output=True, text=True)
-    else:
-        result = subprocess.run(['cloc', './files', '--json', '--include-lang=Go', '--by-file'], capture_output=True, text=True)
-     
-    cloc_output = json.loads(result.stdout)
-    
-    files = {}
-    for file_path, file_info in cloc_output.items():
-        if file_path != 'header' and file_path != 'SUM':
-            
-            # Read the file content
-            try:
-                with open(file_path, 'r') as file:
-                    file_content = file.read()
-            except IOError as e:
-                print(f"Error reading file {file_path}: {e}")
-                file_content = ""
-            
-            # Count import lines
-            import_lines = await count_import_lines_solidity(file_content)
-            
-            files[file_path] = {
-                "file_name": file_path,
-                "code_lines": file_info.get('code', 0) - int(import_lines),
-                "comment_lines": file_info.get('comment', 0),
-                "blank_lines": file_info.get('blank', 0),
-                "file_content": file_content
-            }
-
-    return files
-
-# Function to analyze all project files
-async def analyze_contract(LANGUAGE):
-    files = await get_files_info(language=LANGUAGE)
-    results = []
-    program_counter = 0
-    
-    for file_path, file_info in files.items():
-        score, rationale, code_lines, code_to_comment_ratio, purpose = await get_complexity_score(file_path, file_info, chain=LANGUAGE, bot=LLM_ENGINE, protocol=PROJECT_NAME.capitalize())
-        program_counter += 1
-        if score is not None:
-            results.append({
-                'file': file_path,
-                'purpose': purpose,
-                'score': score,
-                'rationale': rationale,
-                'ncloc': code_lines,
-                'code to comment ratio': str(code_to_comment_ratio)
-            })
-            
-    print(f'Number of files in this repo: {program_counter}')  
-    return results, program_counter
-
 # Function to save results to a json file
 async def save_results(results, output_file):
     async with aiofiles.open(output_file, 'w') as f:
@@ -97,7 +34,7 @@ async def save_results(results, output_file):
         await f.write(json.dumps(json_data, indent=2))
         
 # Function to save summary to a txt file
-async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter):
+async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter, PROJECT_NAME):
     prover_complexity = int(avg_complexity)/2 
     summary = f"""Summary for {PROJECT_NAME.capitalize()}:
 Total nCLOC: {total_cloc}
@@ -125,7 +62,7 @@ async def main():
         print(f"Created output folder: {output_folder} 📁")
     
     print("Analyzing files...🕵️‍♂️")
-    results, program_counter = await analyze_contract(LANGUAGE)
+    results, program_counter = await analyze_contract(LANGUAGE, LLM_ENGINE, PROJECT_NAME)
     
     await save_results(results, complexity_report_file)
     print(f"Analysis complete. Complexity report saved to {complexity_report_file} 💾✅")
@@ -136,7 +73,7 @@ async def main():
     # Calculate adjusted time estimate
     adjusted_time_estimate = await calculate_adjusted_time_estimate_base(total_cloc, avg_complexity, LANGUAGE)
 
-    await save_summary(total_cloc, avg_complexity, median_complexity, adjusted_time_estimate, summary_file, program_counter)
+    await save_summary(total_cloc, avg_complexity, median_complexity, adjusted_time_estimate, summary_file, program_counter, PROJECT_NAME)
     print(f"Project summary saved to {summary_file} 💾✅")
     
     print("Preparing schedule...🗓️")
