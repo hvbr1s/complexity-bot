@@ -8,8 +8,8 @@ async def save_results(results, output_file):
         await f.write(json.dumps(json_data, indent=2))
         
 # Function to save summary to a txt file
-async def save_summary(total_cloc, avg_complexity, median_complexity, time_estimate, output_file, program_counter, PROJECT_NAME):
-    prover_complexity = int(avg_complexity)/2 
+async def save_summary(total_cloc, avg_complexity, avg_complexity_fv, median_complexity, time_estimate, output_file, program_counter, PROJECT_NAME):
+    prover_complexity = int(avg_complexity_fv)/2 
     summary = f"""Summary for {PROJECT_NAME.capitalize()}:
 Total nCLOC: {total_cloc}
 Number of files: {program_counter}

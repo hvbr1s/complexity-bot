@@ -50,12 +50,12 @@ async def main():
     print(f"Analysis complete. Complexity report saved to {complexity_report_file} 💾✅")
     
     print("Calculating summary statistics...🤔")
-    total_cloc, avg_complexity, median_complexity = await calculate_summary_statistics(results)
+    total_cloc, avg_complexity, median_complexity, avg_complexity_fv, median_complexity_fv = await calculate_summary_statistics(results)
     
     # Calculate adjusted time estimate
-    adjusted_time_estimate = await calculate_adjusted_time_estimate_base(total_cloc, avg_complexity, LANGUAGE)
+    adjusted_time_estimate = await calculate_adjusted_time_estimate_base(total_cloc, avg_complexity, avg_complexity_fv, LANGUAGE)
 
-    await save_summary(total_cloc, avg_complexity, median_complexity, adjusted_time_estimate, summary_file, program_counter, PROJECT_NAME)
+    await save_summary(total_cloc, avg_complexity, avg_complexity_fv, median_complexity, adjusted_time_estimate, summary_file, program_counter, PROJECT_NAME)
     print(f"Project summary saved to {summary_file} 💾✅")
     
     print("Preparing schedule...🗓️")
