@@ -1,4 +1,4 @@
-async def prepare_sol_prompt_fv(file_path, code_lines, comment_lines, code_to_comment_ratio, rust_code, protocol):
+async def prepare_sol_prompt_fv(file_path, code_lines, code_to_comment_ratio, rust_code, protocol):
     try:
         SOL_ANALYZER = f''' 
 Your task is to analyze the following Rust-based file which is part of a larger program for the {protocol} project and intended for deployment on the Solana blockchain and provide a complexity score to guide its formal verification.
@@ -24,11 +24,11 @@ Analyze the potential complexity of the program based on the following criteria,
      * 500-1000 lines: Large
      * > 1000 lines: Very large
      
-2. Evaluate the percentage of commented code, the higher the better.
+2. Assess the percentage of commented code. A higher percentage generally indicates better documentation and may ease formal verification.
 
-3. Consider the number of entry points (e.g., 'pub fn'), the more entry points, the more complex to formally verify the program.
+3. Count the number of public functions (e.g., pub fn). A higher number of entry points can increase the complexity of formal verification.
 
-4. Locate and briefly note the functions that could be formally verified.
+4. List functions that are key to the program’s operation and could benefit from formal verification.
 
 5. Evaluate the program's potential challenges for formal verification:
    - Look for presence of floating-point operations (f32 or f64) vs. scaled integers, the presence of floating points make formal verification EXTREMELY difficult.
@@ -50,10 +50,10 @@ Analyze the potential complexity of the program based on the following criteria,
    - Note that the use of Bytemuck simplifies low-level data manipulation (look for 'use bytemuck').
    
 8. Based on your analysis, assign a complexity score from 0 to 10, where:
-- 0: Extremely short or simple file that is not worth formally verifying
-- 1-3: Simple Solana program with straightforward and easily formally verified logic
-- 4-6: Moderate complexity program with logic that is more challenging to formally verify
-- 7-10: High complexity program with multiple CPIs, complex account structures, and non-linear mathematics that are difficult to formally verify
+	- 0: Extremely short or simple file, not worth formal verification.
+	- 1-3: Simple program with straightforward, easily verifiable logic.
+	- 4-6: Moderately complex program with more challenging logic.
+	- 7-10: Highly complex program with multiple CPIs, complex account structures, or non-linear mathematics.
 </thinking>
 
 Your response must be a JSON file with the following structure:
@@ -62,7 +62,7 @@ Your response must be a JSON file with the following structure:
 {{
   "purpose": "[INSERT BRIEF DESCRIPTION OF THE PROGRAM'S PURPOSE IN THE CONTEXT OF {protocol.capitalize()} HERE]",  
   "complexity": "[INSERT SCORE HERE]",
-  "rationale": "[INSERT ONE-SENTENCE EXPLANATION HERE]"
+  "rationale": "[INSERT ONE-SENTENCE EXPLANATION OF THE SCORE HERE]"
 }}
 </output>
 

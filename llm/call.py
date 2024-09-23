@@ -43,10 +43,10 @@ async def get_complexity_score_manual(file_path, file_info, chain, bot, protocol
         code_to_comment_ratio = math.ceil((int(comment_lines) / int(code_lines)) * 100)
         # Prepare system prompt based on chain
         if chain == "sol":
-            prompt = await prepare_sol_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
+            prompt = await prepare_sol_prompt(file_path, code_lines , code_to_comment_ratio, code, protocol)
             system= "You are an expert security researcher specializing in manual security audits of Rust-based Solana programs."
         elif chain == "evm":
-            prompt= await prepare_evm_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
+            prompt= await prepare_evm_prompt(file_path, code_lines , code_to_comment_ratio, code, protocol)
             system="You are an expert security researcher specializing in manual security audits of Solidity-based Ethereum smart contracts."
         elif chain == "move":
             prompt= await prepare_move_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
@@ -150,10 +150,10 @@ async def get_complexity_score_fv(file_path, file_info, chain, bot, protocol):
         code_to_comment_ratio = math.ceil((int(comment_lines) / int(code_lines)) * 100)
         # Prepare system prompt based on chain
         if chain == "sol":
-            prompt = await prepare_sol_prompt_fv(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
+            prompt = await prepare_sol_prompt_fv(file_path, code_lines , code_to_comment_ratio, code, protocol)
             system= "You are an expert security engineer specializing in formal verification of Rust-based Solana programs."
         elif chain == "evm":
-            prompt= await prepare_evm_prompt_fv(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
+            prompt= await prepare_evm_prompt_fv(file_path, code_lines , code_to_comment_ratio, code, protocol)
             system="You are an expert security engineer specializing in formal verification of Solidity-based Ethereum smart contracts."
         print(f'Conjuring {chain.upper()} FV bot 🧙‍♂️')
         

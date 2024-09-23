@@ -1,9 +1,10 @@
 
-async def prepare_sol_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, rust_code, protocol):
+async def prepare_sol_prompt(file_path, code_lines, code_to_comment_ratio, rust_code, protocol):
     try:
         SOL_ANALYZER = f''' 
-Your task is to analyze the following Rust-based file which is part of a larger program intended for deployment on the Solana blockchain and provide a complexity score to guide manual security audits.
-    
+Your task is to analyze the following Rust code, which is part of a larger program intended for deployment on the Solana blockchain. 
+Your goal is to provide a complexity score to guide manual security audits.
+   
 Here is the Rust code to analyze:
 <rust_code>
 {rust_code}
@@ -25,7 +26,7 @@ Analyze the potential complexity of the program based on the following criteria,
      * 500-1000 lines: Large
      * > 1000 lines: Very large
      
-2. Evaluate the percentage of commented code, the higher the better.
+2. Assess the percentage of commented code. A higher percentage generally indicates better documentation and may ease the manual security audit.
 
 3. Locate and briefly note the most complex or security-critical functions
 
@@ -39,14 +40,14 @@ Analyze the potential complexity of the program based on the following criteria,
 
 5. Analyze the code's external dependencies:
    - Note the number and nature of external crates used
-   - Note that the use of the Anchor framework makes the code more secure and easier to read and audit. (look for 'use anchor_lang').
+   - Recognize if the code uses the Anchor framework (look for 'use anchor_lang'), which makes the code more secure and easier to read and audit.
 
-6. Consider the number of entry points (e.g., 'pub fn'), the more entry points, the more complex to audit.
+6. Count the number of entry points (e.g., pub fn). A higher number of entry points increases the complexity of the audit.
    
 7. Based on your analysis, assign a complexity score from 1 to 10, where:
-- 1-3: Simple Solana program with straightforward and easily audited logic
-- 4-6: Moderate complexity program with potential security considerations that might complicate the audit
-- 7-10: High complexity program with multiple CPIs, multiple instructions and complex account and data structures which are time-consuming to review
+	- 1-3: Simple Solana program with straightforward and easily audited logic.
+	- 4-6: Moderately complex program with potential security considerations that might complicate the audit.
+	- 7-10: Highly complex program with multiple CPIs, multiple instructions, and complex account and data structures that are time-consuming to review.
 </thinking>
 
 Your response must be a JSON file with the following structure:
@@ -55,7 +56,7 @@ Your response must be a JSON file with the following structure:
 {{
   "purpose": "[INSERT BRIEF DESCRIPTION OF THE PROGRAM'S PURPOSE HERE]",
   "complexity": "[INSERT SCORE HERE]",
-  "rationale": "[INSERT ONE-SENTENCE EXPLANATION HERE]"
+  "rationale": "[INSERT ONE-SENTENCE EXPLANATION OF THE COMPLEXITY SCORE HERE]"
 }}
 </output>
 
