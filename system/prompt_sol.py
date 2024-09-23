@@ -2,7 +2,7 @@
 async def prepare_sol_prompt(file_path, code_lines, comment_lines, code_to_comment_ratio, rust_code, protocol):
     try:
         SOL_ANALYZER = f''' 
-Your task is to analyze the following Rust-based file which is part of a larger program intended for deployment on the Solana blockchain and provide a complexity score to guide manual security audits and formal verification.
+Your task is to analyze the following Rust-based file which is part of a larger program intended for deployment on the Solana blockchain and provide a complexity score to guide manual security audits.
     
 Here is the Rust code to analyze:
 <rust_code>
@@ -41,10 +41,10 @@ Analyze the potential complexity of the program based on the following criteria,
    - Note the number and nature of external crates used
    - Note that the use of the Anchor framework makes the code more secure and easier to read and audit. (look for 'use anchor_lang').
 
-6. Consider the number of entry points (e.g., 'pub fn'), the more entry points, the more complex to audit and formally verify the program
+6. Consider the number of entry points (e.g., 'pub fn'), the more entry points, the more complex to audit.
    
 7. Based on your analysis, assign a complexity score from 1 to 10, where:
-- 1-3: Simple Solana program with straightforward and easily reviewed logic
+- 1-3: Simple Solana program with straightforward and easily audited logic
 - 4-6: Moderate complexity program with potential security considerations that might complicate the audit
 - 7-10: High complexity program with multiple CPIs, multiple instructions and complex account and data structures which are time-consuming to review
 </thinking>
