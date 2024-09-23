@@ -8,5 +8,4 @@ async def calculate_summary_statistics(results):
     avg_complexity = statistics.mean(complexity_scores)
     median_complexity = statistics.median(complexity_scores)
     avg_complexity_fv = statistics.mean(complexity_scores_fv)
-    median_complexity_fv = statistics.median(complexity_scores_fv)
-    return total_cloc, avg_complexity, median_complexity, avg_complexity_fv, median_complexity_fv
+    return total_cloc, avg_complexity, median_complexity, avg_complexity_fv

@@ -4,8 +4,8 @@ import asyncio
 from llm.call import schedule
 from llm.analyze import analyze_contract
 from utils.save import save_results, save_summary
-from calculate.summary import calculate_summary_statistics
-from calculate.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
+from utils.summary import calculate_summary_statistics
+from utils.adjusted_time import calculate_adjusted_time_estimate_base, calculate_adjusted_time_estimate_loc_weighted
 
 # User input
 
@@ -50,7 +50,7 @@ async def main():
     print(f"Analysis complete. Complexity report saved to {complexity_report_file} 💾✅")
     
     print("Calculating summary statistics...🤔")
-    total_cloc, avg_complexity, median_complexity, avg_complexity_fv, median_complexity_fv = await calculate_summary_statistics(results)
+    total_cloc, avg_complexity, median_complexity, avg_complexity_fv = await calculate_summary_statistics(results)
     
     # Calculate adjusted time estimate
     adjusted_time_estimate = await calculate_adjusted_time_estimate_base(total_cloc, avg_complexity, avg_complexity_fv, LANGUAGE)

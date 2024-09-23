@@ -1,7 +1,7 @@
 import subprocess
 import json
 from llm.call import get_complexity_score_manual, get_complexity_score_fv
-from calculate.import_lines import count_import_lines_solidity
+from utils.import_lines import count_import_lines_solidity
 
 
 # Function to analyze all project files
