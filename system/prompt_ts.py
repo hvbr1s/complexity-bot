@@ -15,7 +15,7 @@ Here is the metadata for the code:
 - Number of lines of comments: {comment_lines}
 - Percentage of commented lines of code: {code_to_comment_ratio}%
 
-Analyze the potential complexity of the file based on the following criteria, think step-by-step:
+Analyze the potential complexity of the file based on the following criteria, make sure to think step-by-step:
 
 <thinking>
 1. Categorize the file size as:
@@ -81,4 +81,9 @@ Do not include any additional information or explanations outside of this JSON s
    
    except Exception as e:
       print(e)
-      return TYPESCRIPT_ANALYZER
+      error  = {
+            "purpose": "Oops, something went wrong, I wasn't able to score that file!",
+            "complexity": "0",
+            "rationale": "Oops, something went wrong, I wasn't able to score that file!"
+         }
+      return error

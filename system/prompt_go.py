@@ -9,7 +9,7 @@ Here is the Go code to analyze:
 {go_file}
 </go_code>
 
-Analyze the provided Go code carefully, think step-by-step:
+Analyze the provided file carefully, make sure to think step-by-step:
 
 <thinking>
 1. Note the following metadata:
@@ -69,4 +69,9 @@ Do not include any additional information or explanations outside of this JSON s
    
    except Exception as e:
       print(e)
-      return GO_ANALYZER
+      error  = {
+            "purpose": "Oops, something went wrong, I wasn't able to score that file!",
+            "complexity": "0",
+            "rationale": "Oops, something went wrong, I wasn't able to score that file!"
+         }
+      return error

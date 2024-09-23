@@ -1,6 +1,6 @@
 import math
 
-async def calculate_adjusted_time_estimate_base(total_loc, avg_complexity, language):
+async def calculate_adjusted_time_estimate_base(total_loc, avg_complexity, avg_complexity_fv, language):
     """
     Calculate the adjusted time estimate based on lines of code (LOC) and average complexity.
 
@@ -13,6 +13,9 @@ async def calculate_adjusted_time_estimate_base(total_loc, avg_complexity, langu
     3. Multiply the base estimate by this complexity multiplier.
     4. Round up to the nearest whole week.
     """
+    
+    # Step 0: Average manual and fv complexity
+    adjusted_complexity = (avg_complexity + avg_complexity_fv) / 2
     
     # Step 1: Calculate the base estimate (in weeks)
     if language == 'ts':
@@ -27,10 +30,10 @@ async def calculate_adjusted_time_estimate_base(total_loc, avg_complexity, langu
         complexity_multiplier = 0.8
     elif 3 < avg_complexity <= 7:
         # Medium complexity: linear adjustment
-        complexity_multiplier = 1 + (avg_complexity - 5) * 0.1
+        complexity_multiplier = 1 + (adjusted_complexity - 5) * 0.1
     else:
         # High complexity: significant increase
-        complexity_multiplier = 1.5 + (avg_complexity - 7) * 0.2
+        complexity_multiplier = 1.5 + (adjusted_complexity - 7) * 0.2
     
     # Step 3: Adjust the base estimate with the complexity multiplier
     adjusted_estimate_weeks = base_estimate_weeks * complexity_multiplier
