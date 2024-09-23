@@ -3,11 +3,10 @@ import statistics
 # Function to calculate summary statistics
 async def calculate_summary_statistics(results):
     try:
-        print(results)
         # Extract complexity scores, using 0 if 'score' key is missing
         complexity_scores = [float(result.get('score_manual', 0)) for result in results]
         
-        # Calculate total lines of code, using 0 if 'code_lines' key is missing
+        # Calculate total lines of code, using 0 if 'nloc' key is missing
         total_cloc = sum(int(result.get('ncloc', 0)) for result in results)
         
         # Calculate average complexity
@@ -20,6 +19,9 @@ async def calculate_summary_statistics(results):
         
         # Extract formal verification complexity scores, using 0 if 'score_fv' key is missing
         complexity_scores_fv = [float(result.get('score_fv', 0)) for result in results]
+        
+        # Filter out scores that are 0
+        complexity_scores_fv = [score for score in complexity_scores_fv if score != 0]
         
         # Calculate average formal verification complexity
         avg_complexity_fv = sum(complexity_scores_fv) / len(complexity_scores_fv) if complexity_scores_fv else 0

@@ -5,7 +5,7 @@ import instructor
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
-from anthropic import AsyncAnthropic
+from anthropic import AsyncAnthropic, RateLimitError
 from system.prompt_sol import prepare_sol_prompt
 from system.prompt_evm import prepare_evm_prompt
 from system.prompt_move import prepare_move_prompt
@@ -59,36 +59,72 @@ async def get_complexity_score_manual(file_path, file_info, chain, bot, protocol
         print(f'Conjuring {chain.upper()} bot 🤖')
         
         if bot == "claude":
-            print(f'{bot.upper()} will take a look at {file_path} 🦾')
-            response = await instructor_client_anthropic.messages.create(
-                temperature=0.0,
-                model=claude_model_prod,
-                system=system,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=1024,
-                response_model=Complexity    
-            )
-            score = response.complexity
-            rationale = response.rationale
-            purpose = response.purpose
+            try:
+                print(f'{bot.upper()} will take a look at {file_path} 🦾')
+                response = await instructor_client_anthropic.messages.create(
+                    temperature=0.0,
+                    model=claude_model_prod,
+                    system=system,
+                    messages=[
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=1024,
+                    response_model=Complexity,
+                    max_retries=3   
+                )
+                score = response.complexity
+                rationale = response.rationale
+                purpose = response.purpose
+            except Exception as e:
+                print(f'Claude encountered an issue{e}, trying GPT 🔧')
+                response = await instructor_client_openai.chat.completions.create(
+                    temperature=0.0,
+                    model=openai_model_prod,
+                    messages=[
+                        #{"role": "system", "content": system},
+                        {"role": "user", "content": prompt}
+                    ],
+                    timeout=60,
+                    response_model=Complexity  
+                )
+                score = response.complexity
+                rationale = response.rationale
+                purpose = response.purpose
+                
             
         elif bot == "gpt":
-            print(f'{bot.upper()} will take a look at {file_path} 🦾')
-            response = await instructor_client_openai.chat.completions.create(
-                temperature=0.0,
-                model=openai_model_prod,
-                messages=[
-                    #{"role": "system", "content": system},
-                    {"role": "user", "content": prompt}
-                ],
-                timeout=60,
-                response_model=Complexity  
-            )
-            score = response.complexity
-            rationale = response.rationale
-            purpose = response.purpose
+            try:
+                print(f'{bot.upper()} will take a look at {file_path} 🦾')
+                response = await instructor_client_openai.chat.completions.create(
+                    temperature=0.0,
+                    model=openai_model_prod,
+                    messages=[
+                        #{"role": "system", "content": system},
+                        {"role": "user", "content": prompt}
+                    ],
+                    timeout=60,
+                    response_model=Complexity,
+                    max_retries=3  
+                )
+                score = response.complexity
+                rationale = response.rationale
+                purpose = response.purpose
+            except Exception as e:
+                print(f'GPT encountered an issue{e}, trying Claude 🔧')
+                response = await instructor_client_anthropic.messages.create(
+                    temperature=0.0,
+                    model=claude_model_prod,
+                    system=system,
+                    messages=[
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=1024,
+                    response_model=Complexity, 
+                )
+                score = response.complexity
+                rationale = response.rationale
+                purpose = response.purpose
+                
             
         if score is not None and rationale is not None:
             print(f'Program {file_path} got assigned a complexity score of {score}. {rationale}')
@@ -121,34 +157,67 @@ async def get_complexity_score_fv(file_path, file_info, chain, bot, protocol):
         print(f'Conjuring {chain.upper()} FV bot 🧙‍♂️')
         
         if bot == "claude":
-            print(f'{bot.upper()} will take a look at {file_path} 🦾')
-            response = await instructor_client_anthropic.messages.create(
-                temperature=0.0,
-                model=claude_model_prod,
-                system=system,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=1024,
-                response_model=Complexity    
-            )
-            score_fv = response.complexity
-            rationale_fv = response.rationale
-            
+            try:
+                print(f'{bot.upper()} will take a look at {file_path} 🦾')
+                response = await instructor_client_anthropic.messages.create(
+                    temperature=0.0,
+                    model=claude_model_prod,
+                    system=system,
+                    messages=[
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=1024,
+                    response_model=Complexity,
+                    max_retries=3   
+                )
+                score_fv = response.complexity
+                rationale_fv = response.rationale
+                
+            except Exception as e:
+                print(f'Claude encountered an issue{e}, trying GPT 🔧')
+                response = await instructor_client_openai.chat.completions.create(
+                    temperature=0.0,
+                    model=openai_model_prod,
+                    messages=[
+                        #{"role": "system", "content": system},
+                        {"role": "user", "content": prompt}
+                    ],
+                    timeout=60,
+                    response_model=Complexity  
+                )
+                score_fv = response.complexity
+                rationale_fv = response.rationale
+                               
         elif bot == "gpt":
-            print(f'{bot.upper()} will take a look at {file_path} 🦾')
-            response = await instructor_client_openai.chat.completions.create(
-                temperature=0.0,
-                model=openai_model_prod,
-                messages=[
-                    #{"role": "system", "content": system},
-                    {"role": "user", "content": prompt}
-                ],
-                timeout=60,
-                response_model=Complexity  
-            )
-            score_fv = response.complexity
-            rationale_fv = response.rationale
+            try:
+                print(f'{bot.upper()} will take a look at {file_path} 🦾')
+                response = await instructor_client_openai.chat.completions.create(
+                    temperature=0.0,
+                    model=openai_model_prod,
+                    messages=[
+                        #{"role": "system", "content": system},
+                        {"role": "user", "content": prompt}
+                    ],
+                    timeout=60,
+                    response_model=Complexity,
+                    max_retries=3  
+                )
+                score_fv = response.complexity
+                rationale_fv = response.rationale
+            except Exception as e:
+                print(f'GPT encountered an issue{e}, trying Claude 🔧')
+                response = await instructor_client_anthropic.messages.create(
+                    temperature=0.0,
+                    model=claude_model_prod,
+                    system=system,
+                    messages=[
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=1024,
+                    response_model=Complexity, 
+                )
+                score_fv = response.complexity
+                rationale_fv = response.rationale
             
         if score_fv is not None and rationale_fv is not None:
             print(f'Program {file_path} got assigned a complexity score (FV) of {score_fv}. {rationale_fv}')
