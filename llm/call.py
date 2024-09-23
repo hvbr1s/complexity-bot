@@ -42,24 +42,24 @@ async def get_complexity_score_manual(file_path, file_info, chain, bot, protocol
         code_to_comment_ratio = math.ceil((int(comment_lines) / int(code_lines)) * 100)
         # Prepare system prompt based on chain
         if chain == "sol":
-            prompt = await prepare_sol_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            prompt = await prepare_sol_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
             system= "You are an expert security researcher specializing in manual security audits of Rust-based Solana programs."
         elif chain == "evm":
-            prompt= await prepare_evm_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            prompt= await prepare_evm_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
             system="You are an expert security researcher specializing in manual security audits of Solidity-based Ethereum smart contracts."
         elif chain == "move":
-            prompt= await prepare_move_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            prompt= await prepare_move_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
             system="You are an expert Move smart contract analyzer specializing in security audits and manual review of Move-based smart contracts for the Aptos blockchain."
         elif chain == "go":
-            prompt= await prepare_go_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            prompt= await prepare_go_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
             system="You are an expert security researcher specializing in manual audits of Go-based projects intended to interact with the Ethereum ecosystem."
         elif chain == "ts":
-            prompt= await prepare_ts_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            prompt= await prepare_ts_prompt(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
             system="You are an expert security researcher specializing in manual audits of TypeScript-based projects."
         print(f'Conjuring {chain.upper()} bot 🤖')
         
         if bot == "claude":
-            print(f'{bot.upper()} will take a look at this 🦾')
+            print(f'{bot.upper()} will take a look at {file_path} 🦾')
             response = await instructor_client_anthropic.messages.create(
                 temperature=0.0,
                 model=claude_model_prod,
@@ -75,7 +75,7 @@ async def get_complexity_score_manual(file_path, file_info, chain, bot, protocol
             purpose = response.purpose
             
         elif bot == "gpt":
-            print(f'{bot.upper()} will take a look at this 🦾')
+            print(f'{bot.upper()} will take a look at {file_path} 🦾')
             response = await instructor_client_openai.chat.completions.create(
                 temperature=0.0,
                 model=openai_model_prod,
@@ -113,15 +113,15 @@ async def get_complexity_score_fv(file_path, file_info, chain, bot, protocol):
         code_to_comment_ratio = math.ceil((int(comment_lines) / int(code_lines)) * 100)
         # Prepare system prompt based on chain
         if chain == "sol":
-            prompt = await prepare_sol_prompt_fv(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            prompt = await prepare_sol_prompt_fv(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
             system= "You are an expert security engineer specializing in formal verification of Rust-based Solana programs."
         elif chain == "evm":
-            prompt= await prepare_evm_prompt_fv(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code)
+            prompt= await prepare_evm_prompt_fv(file_path, code_lines , file_info['comment_lines'], code_to_comment_ratio, code, protocol)
             system="You are an expert security engineer specializing in formal verification of Solidity-based Ethereum smart contracts."
-        print(f'Conjuring {chain.upper()} bot 🤖')
+        print(f'Conjuring {chain.upper()} FV bot 🧙‍♂️')
         
         if bot == "claude":
-            print(f'{bot.upper()} will take a look at this 🦾')
+            print(f'{bot.upper()} will take a look at {file_path} 🦾')
             response = await instructor_client_anthropic.messages.create(
                 temperature=0.0,
                 model=claude_model_prod,
@@ -136,7 +136,7 @@ async def get_complexity_score_fv(file_path, file_info, chain, bot, protocol):
             rationale_fv = response.rationale
             
         elif bot == "gpt":
-            print(f'{bot.upper()} will take a look at this 🦾')
+            print(f'{bot.upper()} will take a look at {file_path} 🦾')
             response = await instructor_client_openai.chat.completions.create(
                 temperature=0.0,
                 model=openai_model_prod,

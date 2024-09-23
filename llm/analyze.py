@@ -13,6 +13,11 @@ async def analyze_contract(LANGUAGE, LLM_ENGINE, PROJECT_NAME):
     for file_path, file_info in files.items():
         program_counter += 1
         score, rationale, code_lines, code_to_comment_ratio, purpose = await get_complexity_score_manual(file_path, file_info, chain=LANGUAGE, bot=LLM_ENGINE, protocol=PROJECT_NAME.capitalize())
+        
+        # Initialize optional fields
+        score_fv = None
+        rationale_fv = None
+        
         if LANGUAGE in ["sol", "evm"]:
             score_fv, rationale_fv = await get_complexity_score_fv(file_path, file_info, chain=LANGUAGE, bot=LLM_ENGINE, protocol=PROJECT_NAME.capitalize())          
         if score is not None:
@@ -21,8 +26,8 @@ async def analyze_contract(LANGUAGE, LLM_ENGINE, PROJECT_NAME):
                 'purpose': purpose,
                 'score_manual': score,
                 'rationale': rationale,
-                'score_fv': score_fv | "",
-                'rationale_fv': rationale_fv | "",
+                'score_fv': score_fv if score_fv is not None else "0",
+                'rationale_fv': rationale_fv if rationale_fv is not None else "",
                 'ncloc': code_lines,
                 'code to comment ratio': str(code_to_comment_ratio)
             })
