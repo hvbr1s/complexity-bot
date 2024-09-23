@@ -12,7 +12,8 @@ from system.prompt_move import prepare_move_prompt
 from system.prompt_go import prepare_go_prompt
 from system.prompt_ts import prepare_ts_prompt
 from system.prompt_scheduler import prepare_scheduler_prompt
-from system_fv.prompts import prepare_evm_prompt_fv, prepare_sol_prompt_fv
+from system_fv.prompt_sol import prepare_sol_prompt_fv
+from system_fv.prompt_evm import prepare_evm_prompt_fv
 
 # Load secrets
 load_dotenv()
