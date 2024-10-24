@@ -24,7 +24,7 @@ class Complexity(BaseModel):
 
 # Set up clients
 claude_client = AsyncAnthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
-claude_model_prod = "claude-3-5-sonnet-20240620"
+claude_model_prod = "claude-3-5-sonnet-latest"
 openai_client = AsyncOpenAI(api_key=os.environ['OPENAI_API_KEY'])
 openai_model_prod = "o1-mini"
 
