@@ -1,4 +1,4 @@
-async def prepare_evm_prompt_fv(file_path, code_lines, comment_lines, code_to_comment_ratio, solidity_contract, protocol):
+async def prepare_evm_prompt_fv(file_path, code_lines, code_to_comment_ratio, solidity_contract, protocol):
    try:
       EVM_ANALYZER = f''' 
 Your task is to analyze a Solidity (.sol) file intended for building a smart contract for the {protocol} project on the Ethereum blockchain and provide a complexity score to guide its formal verification.
@@ -13,7 +13,6 @@ Here is the metadata for the file:
 - Project name: {protocol}
 - File name: {file_path}
 - Number of lines of code: {code_lines}
-- Number of lines of comments: {comment_lines}
 - Percentage of commented lines of code: {code_to_comment_ratio}%
 
 Analyze the potential complexity of the code based on the following criteria, think step-by-step:
@@ -66,10 +65,10 @@ Analyze the potential complexity of the code based on the following criteria, th
     7-10: High complexity contract with delegate calls, assembly, complex state management, and non-linear mathematics that are difficult to formally verify.
 </thinking>
 
-Your response must be a JSON file with the following structure:
+Your response must be a JSON file with the following expected output:
 {{
   "purpose": "[INSERT BRIEF DESCRIPTION OF THE PROGRAM'S PURPOSE HERE]",
-  "complexity": "[SCORE]",
+  "complexity": "[SCORE AS A SINGLE NUMBER FOR EXAMPLE 5]",
   "rationale": "[ONE SENTENCE EXPLANATION]"
 }}
 
@@ -87,7 +86,7 @@ Do not include any additional information or explanations outside of this JSON s
       return error
    
 
-async def prepare_sol_prompt_fv(file_path, code_lines, comment_lines, code_to_comment_ratio, rust_code, protocol):
+async def prepare_sol_prompt_fv(file_path, code_lines, code_to_comment_ratio, rust_code, protocol):
     try:
         SOL_ANALYZER = f''' 
 Your task is to analyze the following Rust-based file which is part of a larger program for the {protocol} project and intended for deployment on the Solana blockchain and provide a complexity score to guide its formal verification.
@@ -150,7 +149,7 @@ Your response must be a JSON file with the following structure:
 <output>
 {{
   "purpose": "[INSERT BRIEF DESCRIPTION OF THE PROGRAM'S PURPOSE HERE]",  
-  "complexity": "[INSERT SCORE HERE]",
+  "complexity": "[SCORE AS A SINGLE NUMBER FOR EXAMPLE 5]",
   "rationale": "[INSERT ONE-SENTENCE EXPLANATION HERE]"
 }}
 </output>
